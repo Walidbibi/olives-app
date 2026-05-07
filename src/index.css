@@ -1,0 +1,106 @@
+@import "tailwindcss";
+
+@theme {
+  --color-olive-50: #f8faf0;
+  --color-olive-100: #f0f5d0;
+  --color-olive-200: #e0eb90;
+  --color-olive-300: #cddc50;
+  --color-olive-400: #b8c820;
+  --color-olive-500: #9fb310;
+  --color-olive-600: #84990a;
+  --color-olive-700: #6a7d0a;
+  --color-olive-800: #55620f;
+  --color-olive-900: #465012;
+}
+
+/* Animation olive qui tourne lentement */
+.spin-slow {
+  animation: spin 3s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Pastille qui pulse pour le message de chargement */
+.dot-ping {
+  position: relative;
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+}
+
+.dot-ping::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background-color: #65a30d; /* vert olive */
+  opacity: 0.75;
+  animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.dot-ping::after {
+  content: "";
+  position: relative;
+  display: block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  background-color: #65a30d;
+}
+
+@keyframes ping {
+  75%, 100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+/* Écran d'accueil global */
+.loading-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(to bottom, #f7fee7, #ecfccb);
+  text-align: center;
+}
+
+.loading-screen-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.loading-screen-subtitle {
+  margin-top: 0.25rem;
+  font-size: 1rem;
+  color: #374151;
+}
+
+.loading-screen-message {
+  margin-top: 1rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Cercle olive */
+.loading-olive-circle {
+  height: 80px;
+  width: 80px;
+  border-radius: 9999px;
+  background-color: #166534;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1),
+    0 10px 10px -5px rgba(0,0,0,0.04);
+  margin-bottom: 1.5rem;
+}
