@@ -900,7 +900,46 @@ function FormulaireRecolte({ onDemanderVente }) {
           </p>
         ) : (
           <>
-          <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
+          {/* Vue cartes — mobile uniquement */}
+          <div className="md:hidden space-y-2 mb-2">
+            {recoltes.map((r) => {
+              const isHuilePerso = r.destination === "huile_perso"
+              const statutVenteLabel = isHuilePerso ? "Non concernée" : r.est_vendu ? "Vendu" : "Disponible"
+              return (
+                <div key={r.id} className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-semibold text-gray-900">{formatDate(r.date)}</span>
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${r.est_vendu ? "bg-green-100 text-green-700" : isHuilePerso ? "bg-purple-100 text-purple-700" : "bg-orange-100 text-orange-700"}`}>{statutVenteLabel}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1 mb-2">
+                    {renderParcelleBadge(r.parcelle_id)}
+                    {renderTypeBadge(r.type_olive)}
+                  </div>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xl font-bold text-gray-900">{r.quantite_kg?.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</span>
+                    <span className="text-sm text-gray-500">{renderDestinationLabel(r.destination)}</span>
+                  </div>
+                  <div className="flex items-center gap-3 pt-2 border-t border-gray-100">
+                    <button type="button" onClick={async () => {
+                      if (r.est_vendu && !isHuilePerso) {
+                        setRecolteAModifier(r); setConfirmVenduStep(1); setVenteAssociee(null); setLoadingVenteAssociee(true); setConfirmVenduModalOpen(true)
+                        const { data } = await supabase.from("vente").select("id, prix_kg_dt, acheteur, quantite_kg").eq("recolte_id", r.id).maybeSingle()
+                        setVenteAssociee(data || null); setLoadingVenteAssociee(false); return
+                      }
+                      ouvrirModalEdition(r)
+                    }} className="text-xs font-medium text-olive-700 hover:text-olive-900">Modifier</button>
+                    {!isHuilePerso && !r.est_vendu && onDemanderVente && (
+                      <button type="button" onClick={() => onDemanderVente(r)} className="rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-semibold text-blue-700">Vendre</button>
+                    )}
+                    <button type="button" onClick={() => handleDelete(r.id)} className="text-xs font-medium text-red-600 hover:text-red-800 ml-auto">Supprimer</button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Vue tableau — desktop uniquement */}
+          <div className="hidden md:block overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
             <table className="min-w-full divide-y divide-gray-200 text-sm">
               <thead className="bg-gray-50">
                 <tr>

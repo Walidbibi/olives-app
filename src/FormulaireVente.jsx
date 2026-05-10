@@ -873,7 +873,36 @@ function FormulaireVente({ recoltePourVente, clearRecoltePourVente }) {
           </p>
         ) : (
           <>
-          <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
+          {/* Vue cartes — mobile uniquement */}
+          <div className="md:hidden space-y-2 mb-2">
+            {ventes.map((v) => {
+              const { parcelleId, type } = getParcelleEtTypeFromVente(v)
+              return (
+                <div key={v.id} className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-semibold text-gray-900">{formatDate(v.date)}</span>
+                    <span className="text-base font-bold text-emerald-700">{v.montant_total_dt?.toLocaleString("fr-FR", { minimumFractionDigits: 3, maximumFractionDigits: 3 })} DT</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1 mb-2">
+                    {parcelleId != null ? renderParcelleBadge(parcelleId) : null}
+                    {type != null ? renderTypeBadge(type) : null}
+                  </div>
+                  <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
+                    <span>{v.quantite_kg?.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</span>
+                    <span>{v.prix_kg_dt?.toLocaleString("fr-FR", { minimumFractionDigits: 3, maximumFractionDigits: 3 })} DT/kg</span>
+                  </div>
+                  {v.acheteur && <p className="text-xs text-gray-500 mb-2">{v.acheteur}</p>}
+                  <div className="flex items-center gap-3 pt-2 border-t border-gray-100">
+                    <button type="button" onClick={() => ouvrirModalEdition(v)} className="text-xs font-medium text-olive-700 hover:text-olive-900">Modifier</button>
+                    <button type="button" onClick={() => handleDelete(v.id)} className="text-xs font-medium text-red-600 hover:text-red-800 ml-auto">Annuler la vente</button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Vue tableau — desktop uniquement */}
+          <div className="hidden md:block overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
             <table className="min-w-full divide-y divide-gray-200 text-sm">
               <thead className="bg-gray-50">
                 <tr>

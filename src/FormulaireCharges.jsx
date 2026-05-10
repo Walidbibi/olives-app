@@ -826,7 +826,32 @@ function FormulaireCharges() {
           </p>
         ) : (
           <>
-          <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
+          {/* Vue cartes — mobile uniquement */}
+          <div className="md:hidden space-y-2 mb-2">
+            {charges.map((ch) => (
+              <div key={ch.id} className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm font-semibold text-gray-900">{formatDate(ch.date)}</span>
+                  <span className="text-base font-bold text-gray-900">{formatMontant(ch.montant_dt)}</span>
+                </div>
+                <div className="text-xs text-gray-500 mb-2">
+                  {formatTypeLabel(ch.type_charge)}
+                  {ch.sous_type ? ` · ${formatSousTypeLabel(ch.type_charge, ch.sous_type)}` : ""}
+                  {ch.type_charge === "equipement" && ch.equipement_id ? ` · ${equipementMap[ch.equipement_id] || ""}` : ""}
+                </div>
+                {(ch.beneficiaire || ch.description) && (
+                  <p className="text-xs text-gray-400 mb-2 truncate">{ch.beneficiaire || ch.description}</p>
+                )}
+                <div className="flex items-center gap-3 pt-2 border-t border-gray-100">
+                  <button type="button" onClick={() => ouvrirModalEdition(ch)} className="text-xs font-medium text-olive-700 hover:text-olive-900">Modifier</button>
+                  <button type="button" onClick={() => demanderSuppression(ch)} className="text-xs font-medium text-red-600 hover:text-red-800 ml-auto">Supprimer</button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Vue tableau — desktop uniquement */}
+          <div className="hidden md:block overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
             <table className="min-w-full divide-y divide-gray-200 text-sm">
               <thead className="bg-gray-50">
                 <tr>
