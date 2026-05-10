@@ -97,29 +97,15 @@ function App() {
             </p>
           </div>
 
-          {/* Bouton Mon profil UNIQUEMENT dans la barre verte */}
-          {/* Boutons header : Assistant + Mon profil */}
-          /*<div className="flex items-center gap-2">
-            {/* Bouton Assistant */}
-            <button
-              type="button"
-              onClick={() => setAssistantOpen(true)}
-              className="inline-flex items-center gap-2 rounded-full bg-olive-600 px-3 py-1.5 text-xs sm:text-sm font-medium text-white shadow hover:bg-olive-500 focus:outline-none focus:ring-2 focus:ring-olive-300"
-            >
-              <Sprout size={16} />
-              <span>Assistant</span>
-            </button>*/
-
-            {/* Bouton Mon profil */}
-            <button
-              type="button"
-              onClick={() => setOngletActif("profil")}
-              className="inline-flex items-center gap-2 rounded-full bg-olive-600 px-3 py-1.5 text-xs sm:text-sm font-medium text-white shadow hover:bg-olive-500 focus:outline-none focus:ring-2 focus:ring-olive-300"
-            >
-              <span>👤</span>
-              <span>Mon profil</span>
-            </button>
-          </div>
+          {/* Bouton Mon profil */}
+          <button
+            type="button"
+            onClick={() => setOngletActif("profil")}
+            className="inline-flex items-center gap-2 rounded-full bg-olive-600 px-3 py-1.5 text-xs sm:text-sm font-medium text-white shadow hover:bg-olive-500 focus:outline-none focus:ring-2 focus:ring-olive-300"
+          >
+            <span>👤</span>
+            <span>Mon profil</span>
+          </button>
         </div>
       </header>
 
