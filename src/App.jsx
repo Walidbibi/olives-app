@@ -8,8 +8,6 @@ import Resume from "./Resume"
 import ProfilExploitation from "./ProfilExploitation"
 import DashboardTracteur from "./DashboardTracteur"
 import CarteExploitation from "./CarteExploitation"
-//import AssistantPanel from "./AssistantPanel";
-import { Sprout } from "lucide-react";
 
 
 const onglets = [
@@ -30,7 +28,6 @@ function App() {
   const [ongletPrecedent, setOngletPrecedent] = useState("resume")
   const [recoltePourVente, setRecoltePourVente] = useState(null)
   const [tracteurSelectionne, setTracteurSelectionne] = useState(null)
-  const [assistantOpen, setAssistantOpen] = useState(false);
   const changerOnglet = (id) => {
     setOngletActif(id)
   }
