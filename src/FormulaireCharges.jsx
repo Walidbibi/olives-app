@@ -108,7 +108,7 @@ function FormulaireCharges() {
 
   useEffect(() => {
     if (!message) return
-    const timer = setTimeout(() => setMessage(""), 3000)
+    const timer = setTimeout(() => setMessage(""), 5000)
     return () => clearTimeout(timer)
   }, [message])
 

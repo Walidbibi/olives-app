@@ -90,7 +90,7 @@ function FormulaireRecolte({ onDemanderVente }) {
     if (!message || messageType !== "success") return
     const timer = setTimeout(() => {
       setMessage("")
-    }, 3000)
+    }, 5000)
     return () => clearTimeout(timer)
   }, [message, messageType])
 

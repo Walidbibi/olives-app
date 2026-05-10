@@ -474,7 +474,7 @@ function ExportExcel() {
 
   useEffect(() => {
     if (!message) return
-    const timer = setTimeout(() => setMessage(null), 4000)
+    const timer = setTimeout(() => setMessage(null), 5000)
     return () => clearTimeout(timer)
   }, [message])
 
