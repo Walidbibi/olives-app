@@ -483,8 +483,8 @@ function FormulaireCharges() {
   }
 
   function getSortIndicator(key) {
-    if (sortConfig.key !== key) return ""
-    return sortConfig.direction === "asc" ? "↑" : "↓"
+    if (sortConfig.key !== key) return <span className="ml-1 text-gray-400 text-xs">↕</span>
+    return <span className="ml-1 text-xs">{sortConfig.direction === "asc" ? "↑" : "↓"}</span>
   }
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
