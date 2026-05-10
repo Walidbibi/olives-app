@@ -830,43 +830,43 @@ function FormulaireCharges() {
               <thead className="bg-gray-50">
                 <tr>
                   <th
-                    className="px-3 py-2 text-left font-medium text-gray-600 cursor-pointer select-none"
+                    className="px-3 py-2 text-left font-medium text-gray-600 cursor-pointer select-none whitespace-nowrap"
                     onClick={() => requestSort("date")}
                   >
                     Date {getSortIndicator("date")}
                   </th>
                   <th
-                    className="px-3 py-2 text-left font-medium text-gray-600 cursor-pointer select-none"
+                    className="px-3 py-2 text-left font-medium text-gray-600 cursor-pointer select-none whitespace-nowrap"
                     onClick={() => requestSort("type_charge")}
                   >
                     Type {getSortIndicator("type_charge")}
                   </th>
                   <th
-                    className="px-3 py-2 text-left font-medium text-gray-600 cursor-pointer select-none"
+                    className="px-3 py-2 text-left font-medium text-gray-600 cursor-pointer select-none whitespace-nowrap"
                     onClick={() => requestSort("sous_type")}
                   >
                     Sous-type {getSortIndicator("sous_type")}
                   </th>
                   <th
-                    className="px-3 py-2 text-left font-medium text-gray-600 cursor-pointer select-none"
+                    className="px-3 py-2 text-left font-medium text-gray-600 cursor-pointer select-none whitespace-nowrap"
                     onClick={() => requestSort("equipement")}
                   >
                     Équipement {getSortIndicator("equipement")}
                   </th>
                   <th
-                    className="px-3 py-2 text-right font-medium text-gray-600 cursor-pointer select-none"
+                    className="px-3 py-2 text-right font-medium text-gray-600 cursor-pointer select-none whitespace-nowrap"
                     onClick={() => requestSort("montant_dt")}
                   >
                     Montant {getSortIndicator("montant_dt")}
                   </th>
                   <th
-                    className="px-3 py-2 text-right font-medium text-gray-600 cursor-pointer select-none"
+                    className="px-3 py-2 text-right font-medium text-gray-600 cursor-pointer select-none whitespace-nowrap"
                     onClick={() => requestSort("nb_ouvriers")}
                   >
                     Nb ouvriers {getSortIndicator("nb_ouvriers")}
                   </th>
                   <th
-                    className="px-3 py-2 text-left font-medium text-gray-600 cursor-pointer select-none"
+                    className="px-3 py-2 text-left font-medium text-gray-600 cursor-pointer select-none whitespace-nowrap"
                     onClick={() => requestSort("beneficiaire")}
                   >
                     Bénéficiaire {getSortIndicator("beneficiaire")}
