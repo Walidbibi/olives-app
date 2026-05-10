@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { supabase } from "./supabase"
 import Modal from "./Modal"
+import Spinner from "./Spinner"
 import { formatDate } from "./dateUtils"
 import SearchableSelect from "./SearchableSelect"
 
@@ -818,7 +819,7 @@ function FormulaireCharges() {
       {/* Tableau triable */}
       <div className="mt-4">
         {loadingCharges ? (
-          <p className="text-sm text-gray-500">Chargement des charges...</p>
+          <Spinner message="Chargement des charges..." />
         ) : totalCount === 0 ? (
           <p className="text-sm text-gray-500">
             Aucune charge ne correspond aux filtres pour cette campagne.
