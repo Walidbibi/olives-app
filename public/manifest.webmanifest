@@ -1,0 +1,17 @@
+{
+  "name": "Olive App",
+  "short_name": "Olive App",
+  "description": "Gestion de récolte d'oliviers",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#4a7c59",
+  "theme_color": "#4a7c59",
+  "icons": [
+    {
+      "src": "/apple-touch-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
