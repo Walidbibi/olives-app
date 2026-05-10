@@ -4,6 +4,7 @@ import Modal from "./Modal"
 import Spinner from "./Spinner"
 import { formatDate } from "./dateUtils"
 import SearchableSelect from "./SearchableSelect"
+import Notification from "./Notification"
 
 function Tag({ text, onRemove }) {
   return (
@@ -727,27 +728,7 @@ function FormulaireVente({ recoltePourVente, clearRecoltePourVente }) {
       </div>
 
       {/* Messages */}
-      {message && (
-        <div
-          className={
-            "flex items-start justify-between gap-2 rounded-md border px-3 py-2 text-sm " +
-            (messageType === "success"
-              ? "border-green-300 bg-green-50 text-green-800"
-              : "border-red-300 bg-red-50 text-red-800")
-          }
-        >
-          <span>{message}</span>
-          {messageType !== "success" && (
-            <button
-              type="button"
-              onClick={() => setMessage("")}
-              className="shrink-0 text-current opacity-50 hover:opacity-100"
-            >
-              ✕
-            </button>
-          )}
-        </div>
-      )}
+      <Notification message={message} type={messageType} onDismiss={() => setMessage("")} />
 
       {/* Encadrés : total + prix moyen (global et filtré) */}
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">

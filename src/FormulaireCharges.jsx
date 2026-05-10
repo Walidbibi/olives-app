@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react"
 import { supabase } from "./supabase"
 import Modal from "./Modal"
 import Spinner from "./Spinner"
+import Notification from "./Notification"
 import { formatDate } from "./dateUtils"
 import SearchableSelect from "./SearchableSelect"
 
@@ -602,17 +603,7 @@ function FormulaireCharges() {
       </div>
 
       {/* Messages */}
-      {message && (
-        <div
-          className={
-            messageType === "success"
-              ? "rounded-md border border-green-300 bg-green-50 px-3 py-2 text-sm text-green-800"
-              : "rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800"
-          }
-        >
-          {message}
-        </div>
-      )}
+      <Notification message={message} type={messageType} onDismiss={() => setMessage("")} />
 
       {/* Résumé */}
       <div className="rounded-md bg-white px-4 py-3 shadow-sm border border-gray-200">
