@@ -92,7 +92,7 @@ Revue complète effectuée. Liste priorisée à implémenter lors des prochaines
 - [ ] **Graphiques dans le Résumé** : Recharts est installé mais pas utilisé dans Resume.jsx. Ajouter courbes d'évolution récolte/ventes.
 - [ ] **Durée des notifications** : Les messages de succès disparaissent en 3s — augmenter à 5s ou rendre dismissible manuellement.
 - [ ] **Skeleton loaders** : Remplacer le spinner par des placeholders animés pendant le chargement des données.
-- [ ] **Précision décimale unifiée** : 2 décimales pour les quantités (kg), 3 pour les montants (DT). Appliquer partout.
+- [x] **Précision décimale unifiée** : 2 décimales pour les quantités (kg), 3 pour les montants (DT). Appliquer partout. ✅ Fait en session 2026-05-10 — formatUtils.js créé, Resume.jsx/FormulaireRecolte/Charges/Profil corrigés.
 - [ ] **Composant FilterModal partagé** : Récolte, Ventes et Charges réimplémentent chacun la même logique de filtre. Extraire en composant unique.
 
 ## Nouvelles fonctionnalités métier — Identifiées (session 2026-05-09)
