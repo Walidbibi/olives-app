@@ -3,6 +3,7 @@ import { supabase } from "./supabase"
 import Modal from "./Modal"
 import Spinner from "./Spinner"
 import { formatDate } from "./dateUtils"
+import SearchableSelect from "./SearchableSelect"
 
 function Tag({ text, onRemove }) {
   return (
@@ -1079,18 +1080,13 @@ function FormulaireVente({ recoltePourVente, clearRecoltePourVente }) {
               <label className="block text-xs font-medium text-gray-600">
                 Parcelle
               </label>
-              <select
+              <SearchableSelect
                 value={tempFiltreParcelleIdVente}
-                onChange={(e) => setTempFiltreParcelleIdVente(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm shadow-sm focus:border-olive-500 focus:ring-olive-500"
-              >
-                <option value="">Toutes les parcelles</option>
-                {parcelles.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.nom}
-                  </option>
-                ))}
-              </select>
+                onChange={setTempFiltreParcelleIdVente}
+                options={[{ value: "", label: "Toutes les parcelles" }, ...parcelles.map(p => ({ value: p.id, label: p.nom }))]}
+                placeholder="Toutes les parcelles"
+                className="mt-1 block w-full"
+              />
             </div>
 
             <div>

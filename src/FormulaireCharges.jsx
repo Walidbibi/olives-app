@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react"
 import { supabase } from "./supabase"
 import Modal from "./Modal"
 import { formatDate } from "./dateUtils"
+import SearchableSelect from "./SearchableSelect"
 
 const SOUS_TYPES_PAR_TYPE = {
   recolte: [
@@ -853,18 +854,13 @@ function FormulaireCharges() {
                 <label className="block text-xs font-medium text-gray-600">
                   Équipement
                 </label>
-                <select
+                <SearchableSelect
                   value={tempFiltreEquipementId}
-                  onChange={(e) => setTempFiltreEquipementId(e.target.value)}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm shadow-sm focus:border-olive-500 focus:ring-olive-500"
-                >
-                  <option value="">Tous les équipements</option>
-                  {equipementsPourFiltre.map((eq) => (
-                    <option key={eq.id} value={eq.id}>
-                      {eq.nom}
-                    </option>
-                  ))}
-                </select>
+                  onChange={setTempFiltreEquipementId}
+                  options={[{ value: "", label: "Tous les équipements" }, ...equipementsPourFiltre.map(eq => ({ value: eq.id, label: eq.nom }))]}
+                  placeholder="Tous les équipements"
+                  className="mt-1 block w-full"
+                />
               </div>
             )}
           </div>
@@ -1184,25 +1180,19 @@ function FormulaireCharges() {
                     exploitation.
                   </div>
                 ) : (
-                  <select
+                  <SearchableSelect
                     value={equipementId}
-                    onChange={(e) => {
-                      const val = e.target.value
+                    onChange={(val) => {
                       setEquipementId(val)
                       if (sousType === "achat_equipement" && val && !editingId) {
                         const eq = equipements.find((eq) => String(eq.id) === String(val))
                         if (eq && eq.prix_achat != null) setMontantDt(String(eq.prix_achat))
                       }
                     }}
-                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-olive-500 focus:ring-olive-500"
-                  >
-                    <option value="">Sélectionner un équipement</option>
-                    {equipements.map((eq) => (
-                      <option key={eq.id} value={eq.id}>
-                        {eq.nom}
-                      </option>
-                    ))}
-                  </select>
+                    options={[{ value: "", label: "Sélectionner un équipement" }, ...equipements.map(eq => ({ value: eq.id, label: eq.nom }))]}
+                    placeholder="Sélectionner un équipement"
+                    className="mt-1 block w-full"
+                  />
                 )}
               </div>
             )}

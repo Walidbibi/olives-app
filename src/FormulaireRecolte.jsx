@@ -3,6 +3,7 @@ import { supabase } from "./supabase"
 import Modal from "./Modal"
 import Spinner from "./Spinner"
 import { formatDate } from "./dateUtils"
+import SearchableSelect from "./SearchableSelect"
 
 function Tag({ text, onRemove }) {
   return (
@@ -808,18 +809,13 @@ function FormulaireRecolte({ onDemanderVente }) {
               <label className="block text-xs font-medium text-gray-600">
                 Parcelle
               </label>
-              <select
+              <SearchableSelect
                 value={tempFiltreParcelleId}
-                onChange={(e) => setTempFiltreParcelleId(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm shadow-sm focus:border-olive-500 focus:ring-olive-500"
-              >
-                <option value="">Toutes les parcelles</option>
-                {parcelles.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.nom}
-                  </option>
-                ))}
-              </select>
+                onChange={setTempFiltreParcelleId}
+                options={[{ value: "", label: "Toutes les parcelles" }, ...parcelles.map(p => ({ value: p.id, label: p.nom }))]}
+                placeholder="Toutes les parcelles"
+                className="mt-1 block w-full"
+              />
             </div>
 
             <div>
@@ -1149,20 +1145,14 @@ function FormulaireRecolte({ onDemanderVente }) {
               <label className="block text-sm font-medium text-gray-700">
                 Parcelle
               </label>
-              <select
+              <SearchableSelect
                 value={parcelleId}
-                onChange={(e) => setParcelleId(e.target.value)}
-                className="mt-1 block w-full h-10 rounded-md border border-gray-300 px-3 text-sm shadow-sm focus:border-olive-500 focus:ring-olive-500 disabled:bg-gray-50 disabled:text-gray-500"
-                required
+                onChange={setParcelleId}
+                options={[{ value: "", label: "Sélectionner une parcelle" }, ...parcelles.map(p => ({ value: p.id, label: p.nom }))]}
+                placeholder="Sélectionner une parcelle"
                 disabled={editingEstVendu}
-              >
-                <option value="">Sélectionner une parcelle</option>
-                {parcelles.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.nom}
-                  </option>
-                ))}
-              </select>
+                className="mt-1 block w-full"
+              />
             </div>
 
             <div>
