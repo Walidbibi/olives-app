@@ -12,8 +12,8 @@ function Modal({ isOpen, onClose, title, children, size = "default" }) {
       />
 
       {/* Modal content */}
-      <div className={`relative z-10 w-full ${maxWidth} bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden`}>
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50">
+      <div className={`relative z-10 w-full ${maxWidth} bg-white rounded-2xl shadow-xl border border-gray-200`}>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50 rounded-t-2xl">
           <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
           <button
             type="button"
