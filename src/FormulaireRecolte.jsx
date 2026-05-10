@@ -54,6 +54,10 @@ function FormulaireRecolte({ onDemanderVente }) {
   const [filtreTypeOlive, setFiltreTypeOlive] = useState("")
   const [filtreDestination, setFiltreDestination] = useState("")
 
+  // Tri
+  const [sortKey, setSortKey] = useState("date")
+  const [sortDir, setSortDir] = useState("desc")
+
   // Popup de filtres
   const [filtersModalOpen, setFiltersModalOpen] = useState(false)
   const [tempFiltreParcelleId, setTempFiltreParcelleId] = useState("")
@@ -174,7 +178,7 @@ function FormulaireRecolte({ onDemanderVente }) {
           { count: "exact" }
         )
         .eq("campagne_id", campagneId)
-        .order("date", { ascending: true })
+        .order(sortKey, { ascending: sortDir === "asc" })
         .range(from, to)
 
       let globalQuery = supabase
@@ -240,7 +244,24 @@ function FormulaireRecolte({ onDemanderVente }) {
     filtreTypeOlive,
     filtreDestination,
     refreshKey,
+    sortKey,
+    sortDir,
   ])
+
+  function handleSort(key) {
+    if (sortKey === key) {
+      setSortDir(d => d === "asc" ? "desc" : "asc")
+    } else {
+      setSortKey(key)
+      setSortDir("asc")
+    }
+    setPageCourante(1)
+  }
+
+  function getSortIndicator(key) {
+    if (sortKey !== key) return <span className="ml-1 text-gray-400 text-xs">↕</span>
+    return <span className="ml-1 text-xs">{sortDir === "asc" ? "↑" : "↓"}</span>
+  }
 
   function resetForm() {
     setDateRecolte("")
@@ -883,26 +904,26 @@ function FormulaireRecolte({ onDemanderVente }) {
             <table className="min-w-full divide-y divide-gray-200 text-sm">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-3 py-2 text-left font-medium text-gray-600">
-                    Date
+                  <th className="px-3 py-2 text-left font-medium text-gray-600 cursor-pointer select-none hover:bg-gray-100" onClick={() => handleSort("date")}>
+                    Date {getSortIndicator("date")}
                   </th>
                   <th className="px-3 py-2 text-left font-medium text-gray-600">
                     Parcelle
                   </th>
-                  <th className="px-3 py-2 text-left font-medium text-gray-600">
-                    Type
+                  <th className="px-3 py-2 text-left font-medium text-gray-600 cursor-pointer select-none hover:bg-gray-100" onClick={() => handleSort("type_olive")}>
+                    Type {getSortIndicator("type_olive")}
                   </th>
-                  <th className="px-3 py-2 text-right font-medium text-gray-600">
-                    Quantité (kg)
+                  <th className="px-3 py-2 text-right font-medium text-gray-600 cursor-pointer select-none hover:bg-gray-100" onClick={() => handleSort("quantite_kg")}>
+                    Quantité (kg) {getSortIndicator("quantite_kg")}
                   </th>
-                  <th className="px-3 py-2 text-right font-medium text-gray-600">
-                    Sachets
+                  <th className="px-3 py-2 text-right font-medium text-gray-600 cursor-pointer select-none hover:bg-gray-100" onClick={() => handleSort("nb_sachets")}>
+                    Sachets {getSortIndicator("nb_sachets")}
                   </th>
-                  <th className="px-3 py-2 text-right font-medium text-gray-600">
-                    Quantité (L)
+                  <th className="px-3 py-2 text-right font-medium text-gray-600 cursor-pointer select-none hover:bg-gray-100" onClick={() => handleSort("quantite_litres")}>
+                    Quantité (L) {getSortIndicator("quantite_litres")}
                   </th>
-                  <th className="px-3 py-2 text-left font-medium text-gray-600">
-                    Destination
+                  <th className="px-3 py-2 text-left font-medium text-gray-600 cursor-pointer select-none hover:bg-gray-100" onClick={() => handleSort("destination")}>
+                    Destination {getSortIndicator("destination")}
                   </th>
                   <th className="px-3 py-2 text-left font-medium text-gray-600">
                     Statut vente

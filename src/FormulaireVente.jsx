@@ -61,6 +61,10 @@ function FormulaireVente({ recoltePourVente, clearRecoltePourVente }) {
   const [filtreParcelleIdVente, setFiltreParcelleIdVente] = useState("")
   const [filtreTypeOliveVente, setFiltreTypeOliveVente] = useState("")
 
+  // Tri
+  const [sortKey, setSortKey] = useState("date")
+  const [sortDir, setSortDir] = useState("desc")
+
   // Popup de filtres
   const [filtersModalOpen, setFiltersModalOpen] = useState(false)
   const [tempFiltreDateDebutVente, setTempFiltreDateDebutVente] = useState("")
@@ -176,7 +180,7 @@ function FormulaireVente({ recoltePourVente, clearRecoltePourVente }) {
           { count: "exact" }
         )
         .eq("campagne_id", campagneId)
-        .order("date", { ascending: true })
+        .order(sortKey, { ascending: sortDir === "asc" })
         .range(from, to)
 
       let globalQuery = supabase
@@ -223,7 +227,7 @@ function FormulaireVente({ recoltePourVente, clearRecoltePourVente }) {
       setLoadingVentes(false)
     }
     loadVentes()
-  }, [campagneId, pageCourante, filtreDateDebutVente, filtreDateFinVente, filtreParcelleIdVente, filtreTypeOliveVente, refreshKey])
+  }, [campagneId, pageCourante, filtreDateDebutVente, filtreDateFinVente, filtreParcelleIdVente, filtreTypeOliveVente, refreshKey, sortKey, sortDir])
 
   // Récoltes vendables
   useEffect(() => {
@@ -263,6 +267,21 @@ function FormulaireVente({ recoltePourVente, clearRecoltePourVente }) {
     }
     loadRecoltesVendables()
   }, [campagneId])
+
+  function handleSort(key) {
+    if (sortKey === key) {
+      setSortDir(d => d === "asc" ? "desc" : "asc")
+    } else {
+      setSortKey(key)
+      setSortDir("asc")
+    }
+    setPageCourante(1)
+  }
+
+  function getSortIndicator(key) {
+    if (sortKey !== key) return <span className="ml-1 text-gray-400 text-xs">↕</span>
+    return <span className="ml-1 text-xs">{sortDir === "asc" ? "↑" : "↓"}</span>
+  }
 
   function resetForm() {
     setRecolteId("")
@@ -853,8 +872,8 @@ function FormulaireVente({ recoltePourVente, clearRecoltePourVente }) {
             <table className="min-w-full divide-y divide-gray-200 text-sm">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-3 py-2 text-left font-medium text-gray-600">
-                    Date
+                  <th className="px-3 py-2 text-left font-medium text-gray-600 cursor-pointer select-none hover:bg-gray-100" onClick={() => handleSort("date")}>
+                    Date {getSortIndicator("date")}
                   </th>
                   <th className="px-3 py-2 text-left font-medium text-gray-600">
                     Parcelle
@@ -862,17 +881,17 @@ function FormulaireVente({ recoltePourVente, clearRecoltePourVente }) {
                   <th className="px-3 py-2 text-left font-medium text-gray-600">
                     Type d'olive
                   </th>
-                  <th className="px-3 py-2 text-right font-medium text-gray-600">
-                    Quantité (kg)
+                  <th className="px-3 py-2 text-right font-medium text-gray-600 cursor-pointer select-none hover:bg-gray-100" onClick={() => handleSort("quantite_kg")}>
+                    Quantité (kg) {getSortIndicator("quantite_kg")}
                   </th>
-                  <th className="px-3 py-2 text-right font-medium text-gray-600">
-                    Prix / kg
+                  <th className="px-3 py-2 text-right font-medium text-gray-600 cursor-pointer select-none hover:bg-gray-100" onClick={() => handleSort("prix_kg_dt")}>
+                    Prix / kg {getSortIndicator("prix_kg_dt")}
                   </th>
-                  <th className="px-3 py-2 text-right font-medium text-gray-600">
-                    Montant total
+                  <th className="px-3 py-2 text-right font-medium text-gray-600 cursor-pointer select-none hover:bg-gray-100" onClick={() => handleSort("montant_total_dt")}>
+                    Montant total {getSortIndicator("montant_total_dt")}
                   </th>
-                  <th className="px-3 py-2 text-left font-medium text-gray-600">
-                    Acheteur
+                  <th className="px-3 py-2 text-left font-medium text-gray-600 cursor-pointer select-none hover:bg-gray-100" onClick={() => handleSort("acheteur")}>
+                    Acheteur {getSortIndicator("acheteur")}
                   </th>
                   <th className="px-3 py-2 text-right font-medium text-gray-600">
                     Actions
