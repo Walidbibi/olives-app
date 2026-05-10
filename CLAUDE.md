@@ -77,7 +77,7 @@ Revue complète effectuée. Liste priorisée à implémenter lors des prochaines
 ### HAUTE priorité (bloquant pour l'usage mobile)
 - [ ] **Tables → cards sur mobile** : Les tableaux Récolte, Ventes, Charges nécessitent un scroll horizontal sur téléphone. Basculer vers une vue en cartes sur petit écran (<768px).
 - [ ] **Validation temps réel des formulaires** : Les erreurs n'apparaissent qu'au submit. Ajouter validation pendant la saisie.
-- [ ] **Messages de chargement spécifiques** : Remplacer "Chargement..." par des messages précis ("Chargement des récoltes..."). Afficher une erreur visible si la requête échoue (pas de spinner infini).
+- [x] **Messages de chargement spécifiques** : Remplacer "Chargement..." par des messages précis ("Chargement des récoltes..."). Afficher une erreur visible si la requête échoue (pas de spinner infini). ✅ Fait en session 2026-05-10 — messages précis dans tous les formulaires + DashboardTracteur, bouton Réessayer sur l'écran d'erreur global.
 - [ ] **Selects filtrables** : Les listes déroulantes (équipements, parcelles) ne sont pas recherchables. Ajouter un champ de recherche/autocomplete.
 - [ ] **Fil d'Ariane dans la navigation imbriquée** : Quand l'utilisateur est dans Profil > Équipements > Dashboard Tracteur, aucun repère visuel. Ajouter un breadcrumb.
 
