@@ -50,14 +50,17 @@ function SearchableSelect({ value, onChange, options, placeholder = "Sélectionn
         className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-olive-500 focus:outline-none focus:ring-1 focus:ring-olive-500 disabled:bg-gray-50 disabled:text-gray-500"
       />
       {open && (
-        <ul className="absolute z-50 mt-1 max-h-48 w-full overflow-y-auto rounded-md border border-gray-200 bg-white shadow-lg">
+        <ul
+          className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto overscroll-contain rounded-md border border-gray-200 bg-white shadow-lg"
+          onWheel={e => e.stopPropagation()}
+        >
           {filtered.length === 0 ? (
-            <li className="px-3 py-2 text-sm text-gray-400">Aucun résultat</li>
+            <li className="px-3 py-2.5 text-sm text-gray-400">Aucun résultat</li>
           ) : filtered.map(o => (
             <li
               key={String(o.value)}
               onMouseDown={() => handleSelect(o.value)}
-              className={`cursor-pointer px-3 py-2 text-sm hover:bg-olive-50 ${String(o.value) === String(value) ? "bg-olive-100 font-medium" : ""}`}
+              className={`cursor-pointer px-3 py-2.5 text-sm leading-snug hover:bg-olive-50 ${String(o.value) === String(value) ? "bg-olive-100 font-medium" : ""}`}
             >
               {o.label}
             </li>
