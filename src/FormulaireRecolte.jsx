@@ -907,18 +907,23 @@ function FormulaireRecolte({ onDemanderVente }) {
               const statutVenteLabel = isHuilePerso ? "Non concernée" : r.est_vendu ? "Vendu" : "Disponible"
               return (
                 <div key={r.id} className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
-                  <div className="flex items-center justify-between mb-2">
+                  {/* Ligne infos : toutes les métadonnées sur une seule ligne */}
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-2">
                     <span className="text-sm font-semibold text-gray-900">{formatDate(r.date)}</span>
+                    <span className="text-gray-300">·</span>
+                    {renderParcelleBadge(r.parcelle_id)}
+                    <span className="text-gray-300">·</span>
+                    {renderTypeBadge(r.type_olive)}
+                    <span className="text-gray-300">·</span>
+                    <span className="text-xs text-gray-500">{renderDestinationLabel(r.destination)}</span>
+                    <span className="text-gray-300">·</span>
                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${r.est_vendu ? "bg-green-100 text-green-700" : isHuilePerso ? "bg-purple-100 text-purple-700" : "bg-orange-100 text-orange-700"}`}>{statutVenteLabel}</span>
                   </div>
-                  <div className="flex flex-wrap gap-1 mb-2">
-                    {renderParcelleBadge(r.parcelle_id)}
-                    {renderTypeBadge(r.type_olive)}
-                  </div>
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-xl font-bold text-gray-900">{r.quantite_kg?.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</span>
-                    <span className="text-sm text-gray-500">{renderDestinationLabel(r.destination)}</span>
-                  </div>
+                  {/* Quantité prominente */}
+                  <p className="text-2xl font-bold text-gray-900 mb-3">
+                    {r.quantite_kg?.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg
+                  </p>
+                  {/* Actions */}
                   <div className="flex items-center gap-3 pt-2 border-t border-gray-100">
                     <button type="button" onClick={async () => {
                       if (r.est_vendu && !isHuilePerso) {
