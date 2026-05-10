@@ -181,8 +181,8 @@ function FormulaireVente({ recoltePourVente, clearRecoltePourVente }) {
         )
         .eq("campagne_id", campagneId)
         .order(
-          sortKey === "parcelle_id" ? "parcelle_id" : sortKey,
-          sortKey === "parcelle_id"
+          sortKey,
+          ["parcelle_id", "type_olive"].includes(sortKey)
             ? { referencedTable: "recolte_journaliere", ascending: sortDir === "asc" }
             : { ascending: sortDir === "asc" }
         )
@@ -883,8 +883,8 @@ function FormulaireVente({ recoltePourVente, clearRecoltePourVente }) {
                   <th className="px-3 py-2 text-left font-medium text-gray-600 cursor-pointer select-none hover:bg-gray-100" onClick={() => handleSort("parcelle_id")}>
                     Parcelle {getSortIndicator("parcelle_id")}
                   </th>
-                  <th className="px-3 py-2 text-left font-medium text-gray-600">
-                    Type d'olive
+                  <th className="px-3 py-2 text-left font-medium text-gray-600 cursor-pointer select-none hover:bg-gray-100" onClick={() => handleSort("type_olive")}>
+                    Type d'olive {getSortIndicator("type_olive")}
                   </th>
                   <th className="px-3 py-2 text-right font-medium text-gray-600 cursor-pointer select-none hover:bg-gray-100" onClick={() => handleSort("quantite_kg")}>
                     Quantité (kg) {getSortIndicator("quantite_kg")}
