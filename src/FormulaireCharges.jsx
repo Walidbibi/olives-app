@@ -1149,7 +1149,7 @@ function FormulaireCharges() {
             <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
               Le prix d&apos;achat de{" "}
               <span className="font-semibold">&laquo; {avertissementPrixAchat.nom} &raquo;</span>{" "}
-              ({Number(avertissementPrixAchat.prix).toLocaleString("fr-FR")} DT) est déjà enregistré.
+              ({Number(avertissementPrixAchat.prix).toLocaleString("fr-FR", { minimumFractionDigits: 3, maximumFractionDigits: 3 })} DT) est déjà enregistré.
               Tout changement du montant mettra à jour la charge existante et le prix d&apos;achat de l&apos;équipement.
             </div>
           )}

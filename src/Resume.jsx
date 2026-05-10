@@ -578,7 +578,7 @@ function Resume({ onNavigateTracteur }) {
     {
       id: "marge",
       label: "Marge nette",
-      value: kpi.marge.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " DT",
+      value: kpi.marge.toLocaleString("fr-FR", { minimumFractionDigits: 3, maximumFractionDigits: 3 }) + " DT",
       sub:
         kpi.ca > 0
           ? `(${((kpi.marge / kpi.ca) * 100).toFixed(1)} % du CA)`
@@ -614,7 +614,7 @@ function Resume({ onNavigateTracteur }) {
   ]
 
   function formatMontant(value) {
-    return `${value.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} DT`
+    return `${value.toLocaleString("fr-FR", { minimumFractionDigits: 3, maximumFractionDigits: 3 })} DT`
   }
 
   function labelTypeCharge(key) {
@@ -1171,8 +1171,8 @@ function Resume({ onNavigateTracteur }) {
                     </td>
                     <td className="px-3 py-2 text-right text-gray-900">
                       {kpi.totalKg.toLocaleString("fr-FR", {
-                        minimumFractionDigits: 3,
-                        maximumFractionDigits: 3,
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
                       })}{" "}
                       kg
                     </td>
@@ -1221,8 +1221,8 @@ function Resume({ onNavigateTracteur }) {
                         </td>
                         <td className="px-3 py-2 text-right text-gray-800">
                           {ligne.quantite.toLocaleString("fr-FR", {
-                            minimumFractionDigits: 3,
-                            maximumFractionDigits: 3,
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
                           })}{" "}
                           kg
                         </td>
@@ -1313,8 +1313,8 @@ function Resume({ onNavigateTracteur }) {
                     </td>
                     <td className="px-3 py-2 text-right text-gray-900">
                       {kpi.totalKg.toLocaleString("fr-FR", {
-                        minimumFractionDigits: 3,
-                        maximumFractionDigits: 3,
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
                       })}{" "}
                       kg
                     </td>
@@ -1404,8 +1404,8 @@ function Resume({ onNavigateTracteur }) {
                         </td>
                         <td className="px-3 py-2 text-right text-gray-800">
                           {ligne.litres.toLocaleString("fr-FR", {
-                            minimumFractionDigits: 3,
-                            maximumFractionDigits: 3,
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
                           })}{" "}
                           L
                         </td>
@@ -1423,8 +1423,8 @@ function Resume({ onNavigateTracteur }) {
                     <td className="px-3 py-2 text-gray-900">Total</td>
                     <td className="px-3 py-2 text-right text-gray-900">
                       {kpi.totalLitresPerso.toLocaleString("fr-FR", {
-                        minimumFractionDigits: 3,
-                        maximumFractionDigits: 3,
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
                       })}{" "}
                       L
                     </td>
@@ -1473,8 +1473,8 @@ function Resume({ onNavigateTracteur }) {
                         </td>
                         <td className="px-3 py-2 text-right text-gray-800">
                           {ligne.litres.toLocaleString("fr-FR", {
-                            minimumFractionDigits: 3,
-                            maximumFractionDigits: 3,
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
                           })}{" "}
                           L
                         </td>
@@ -1492,8 +1492,8 @@ function Resume({ onNavigateTracteur }) {
                     <td className="px-3 py-2 text-gray-900">Total</td>
                     <td className="px-3 py-2 text-right text-gray-900">
                       {kpi.totalLitresPerso.toLocaleString("fr-FR", {
-                        minimumFractionDigits: 3,
-                        maximumFractionDigits: 3,
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
                       })}{" "}
                       L
                     </td>
@@ -1745,8 +1745,8 @@ function Resume({ onNavigateTracteur }) {
                       </td>
                       <td className="px-3 py-2 text-right text-gray-900">
                         {kpi.totalKg.toLocaleString("fr-FR", {
-                          minimumFractionDigits: 3,
-                          maximumFractionDigits: 3,
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
                         })}{" "}
                         kg
                       </td>

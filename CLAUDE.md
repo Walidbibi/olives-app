@@ -82,7 +82,7 @@ Revue complète effectuée. Liste priorisée à implémenter lors des prochaines
 - [ ] **Fil d'Ariane dans la navigation imbriquée** : Quand l'utilisateur est dans Profil > Équipements > Dashboard Tracteur, aucun repère visuel. Ajouter un breadcrumb.
 
 ### MOYENNE priorité (qualité au quotidien)
-- [ ] **Tri des colonnes de tableau** : Permettre de cliquer sur les en-têtes pour trier (Récolte, Ventes, Charges).
+- [x] **Tri des colonnes de tableau** : Permettre de cliquer sur les en-têtes pour trier (Récolte, Ventes, Charges). ✅ Fait en session 2026-05-10 — tri serveur (Supabase .order()) sur Récolte et Ventes, tri serveur sur Charges après migration pagination.
 - [ ] **États vides unifiés** : Certaines sections affichent "Aucune donnée...", d'autres un tableau vide, d'autres rien. Créer un composant EmptyState réutilisable.
 - [ ] **Tailles de boutons touch** : Les boutons de pagination sont en dessous du standard tactile 44×44px.
 - [ ] **Accessibilité des modales** : Ajouter aria-modal, aria-labelledby, gestion du focus clavier sur le composant Modal.jsx.

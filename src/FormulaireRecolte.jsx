@@ -739,14 +739,14 @@ function FormulaireRecolte({ onDemanderVente }) {
           Total récolté pour la campagne{" "}
           {campagneSelectionnee ? campagneSelectionnee.annee : "-"} :{" "}
           <span className="font-semibold">
-            {totalKgGlobal.toLocaleString("fr-FR")} kg
+            {totalKgGlobal.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg
           </span>
         </p>
         {hasActiveFilters && (
           <p className="text-xs text-gray-500 mt-1">
             Sur la sélection filtrée :{" "}
             <span className="font-semibold">
-              {totalKgFiltre.toLocaleString("fr-FR")} kg
+              {totalKgFiltre.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg
             </span>
           </p>
         )}
@@ -952,14 +952,14 @@ function FormulaireRecolte({ onDemanderVente }) {
                         {renderTypeBadge(r.type_olive)}
                       </td>
                       <td className="px-3 py-2 text-right text-gray-800">
-                        {r.quantite_kg?.toLocaleString("fr-FR")} kg
+                        {r.quantite_kg?.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg
                       </td>
                       <td className="px-3 py-2 text-right text-gray-800">
                         {r.nb_sachets != null ? r.nb_sachets : "-"}
                       </td>
                       <td className="px-3 py-2 text-right text-gray-800">
                         {r.quantite_litres != null
-                          ? `${r.quantite_litres.toLocaleString("fr-FR")} L`
+                          ? `${r.quantite_litres.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} L`
                           : "-"}
                       </td>
                       <td className="px-3 py-2 text-gray-800">
@@ -1349,7 +1349,7 @@ function FormulaireRecolte({ onDemanderVente }) {
                     <span className="font-semibold">{formatDate(recolteAModifier.date)}</span>{" "}
                     ({nomParcelleDepuisId(recolteAModifier.parcelle_id)} —{" "}
                     {renderTypeLabel(recolteAModifier.type_olive)},{" "}
-                    {recolteAModifier.quantite_kg?.toLocaleString("fr-FR")} kg) est déjà vendue.
+                    {recolteAModifier.quantite_kg?.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg) est déjà vendue.
                   </p>
 
                   {loadingVenteAssociee ? (
@@ -1359,7 +1359,7 @@ function FormulaireRecolte({ onDemanderVente }) {
                       <p>
                         Quantité vendue :{" "}
                         <span className="font-semibold">
-                          {venteAssociee.quantite_kg?.toLocaleString("fr-FR")} kg
+                          {venteAssociee.quantite_kg?.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg
                         </span>
                       </p>
                       <p>
@@ -1490,7 +1490,7 @@ function FormulaireRecolte({ onDemanderVente }) {
                 </span>{" "}
                 ,{" "}
                 <span className="font-semibold">
-                  {recolteASupprimer.quantite_kg?.toLocaleString("fr-FR")} kg
+                  {recolteASupprimer.quantite_kg?.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg
                 </span>
                 .
               </p>
