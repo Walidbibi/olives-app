@@ -51,7 +51,7 @@ function SearchableSelect({ value, onChange, options, placeholder = "Sélectionn
       />
       {open && (
         <ul
-          className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto overscroll-contain rounded-md border border-gray-200 bg-white shadow-lg"
+          className="absolute z-50 mt-1 max-h-60 w-full min-w-55 overflow-y-auto overscroll-contain rounded-md border border-gray-200 bg-white shadow-lg"
           onWheel={e => e.stopPropagation()}
         >
           {filtered.length === 0 ? (
