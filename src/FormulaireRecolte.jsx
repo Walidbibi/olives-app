@@ -907,10 +907,13 @@ function FormulaireRecolte({ onDemanderVente }) {
               const statutVenteLabel = isHuilePerso ? "Non concernée" : r.est_vendu ? "Vendu" : "Disponible"
               return (
                 <div key={r.id} className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
-                  {/* Date + Quantité */}
-                  <div className="flex items-center justify-between mb-1">
+                  {/* Date + Quantité + Sachets */}
+                  <div className="flex items-start justify-between mb-1">
                     <p className="text-sm font-semibold text-gray-900">{formatDate(r.date)}</p>
-                    <p className="text-xl font-bold text-gray-900">{r.quantite_kg?.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</p>
+                    <div className="text-right">
+                      <p className="text-xl font-bold text-gray-900">{r.quantite_kg?.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</p>
+                      {r.nb_sachets != null && <p className="text-xs text-gray-500">{r.nb_sachets} sachet{r.nb_sachets > 1 ? "s" : ""}</p>}
+                    </div>
                   </div>
                   {/* Infos */}
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-3">
