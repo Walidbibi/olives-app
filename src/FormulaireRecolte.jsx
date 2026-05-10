@@ -907,8 +907,8 @@ function FormulaireRecolte({ onDemanderVente }) {
                   <th className="px-3 py-2 text-left font-medium text-gray-600 cursor-pointer select-none hover:bg-gray-100" onClick={() => handleSort("date")}>
                     Date {getSortIndicator("date")}
                   </th>
-                  <th className="px-3 py-2 text-left font-medium text-gray-600">
-                    Parcelle
+                  <th className="px-3 py-2 text-left font-medium text-gray-600 cursor-pointer select-none hover:bg-gray-100" onClick={() => handleSort("parcelle_id")}>
+                    Parcelle {getSortIndicator("parcelle_id")}
                   </th>
                   <th className="px-3 py-2 text-left font-medium text-gray-600 cursor-pointer select-none hover:bg-gray-100" onClick={() => handleSort("type_olive")}>
                     Type {getSortIndicator("type_olive")}
@@ -925,8 +925,8 @@ function FormulaireRecolte({ onDemanderVente }) {
                   <th className="px-3 py-2 text-left font-medium text-gray-600 cursor-pointer select-none hover:bg-gray-100" onClick={() => handleSort("destination")}>
                     Destination {getSortIndicator("destination")}
                   </th>
-                  <th className="px-3 py-2 text-left font-medium text-gray-600">
-                    Statut vente
+                  <th className="px-3 py-2 text-left font-medium text-gray-600 cursor-pointer select-none hover:bg-gray-100" onClick={() => handleSort("est_vendu")}>
+                    Statut vente {getSortIndicator("est_vendu")}
                   </th>
                   <th className="px-3 py-2 text-right font-medium text-gray-600">
                     Actions
