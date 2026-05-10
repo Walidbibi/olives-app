@@ -180,7 +180,12 @@ function FormulaireVente({ recoltePourVente, clearRecoltePourVente }) {
           { count: "exact" }
         )
         .eq("campagne_id", campagneId)
-        .order(sortKey, { ascending: sortDir === "asc" })
+        .order(
+          sortKey === "parcelle_id" ? "parcelle_id" : sortKey,
+          sortKey === "parcelle_id"
+            ? { referencedTable: "recolte_journaliere", ascending: sortDir === "asc" }
+            : { ascending: sortDir === "asc" }
+        )
         .range(from, to)
 
       let globalQuery = supabase
@@ -875,8 +880,8 @@ function FormulaireVente({ recoltePourVente, clearRecoltePourVente }) {
                   <th className="px-3 py-2 text-left font-medium text-gray-600 cursor-pointer select-none hover:bg-gray-100" onClick={() => handleSort("date")}>
                     Date {getSortIndicator("date")}
                   </th>
-                  <th className="px-3 py-2 text-left font-medium text-gray-600">
-                    Parcelle
+                  <th className="px-3 py-2 text-left font-medium text-gray-600 cursor-pointer select-none hover:bg-gray-100" onClick={() => handleSort("parcelle_id")}>
+                    Parcelle {getSortIndicator("parcelle_id")}
                   </th>
                   <th className="px-3 py-2 text-left font-medium text-gray-600">
                     Type d'olive
