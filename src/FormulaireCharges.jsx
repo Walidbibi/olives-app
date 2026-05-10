@@ -98,8 +98,12 @@ function FormulaireCharges() {
     direction: "asc",
   })
 
-  // Pagination
+  // Pagination serveur
   const [page, setPage] = useState(1)
+  const [totalCount, setTotalCount] = useState(0)
+  const [totalMontantGlobal, setTotalMontantGlobal] = useState(0)
+  const [totalMontantFiltre, setTotalMontantFiltre] = useState(0)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
     if (!message) return
@@ -169,39 +173,83 @@ function FormulaireCharges() {
     loadEquipements()
   }, [])
 
-  // Charges
+  // Charges — paginées + filtrées + triées côté serveur
   useEffect(() => {
     async function loadCharges() {
       if (!campagneId) {
         setCharges([])
+        setTotalCount(0)
+        setTotalMontantGlobal(0)
+        setTotalMontantFiltre(0)
         return
       }
       setLoadingCharges(true)
-      const { data, error } = await supabase
+
+      const from = (page - 1) * PAGE_SIZE
+      const to = from + PAGE_SIZE - 1
+      const sortKeyDb = sortConfig.key === "equipement" ? "equipement_id" : sortConfig.key
+
+      let pageQuery = supabase
         .from("charge")
-        .select("*")
+        .select("*", { count: "exact" })
         .eq("campagne_id", campagneId)
-        .order("date", { ascending: true })
+        .order(sortKeyDb, { ascending: sortConfig.direction === "asc" })
+        .range(from, to)
+
+      let globalQuery = supabase
+        .from("charge")
+        .select("montant_dt")
+        .eq("campagne_id", campagneId)
+
+      let filtreQuery = supabase
+        .from("charge")
+        .select("montant_dt")
+        .eq("campagne_id", campagneId)
+
+      if (filtreDateDebut) {
+        pageQuery = pageQuery.gte("date", filtreDateDebut)
+        filtreQuery = filtreQuery.gte("date", filtreDateDebut)
+      }
+      if (filtreDateFin) {
+        pageQuery = pageQuery.lte("date", filtreDateFin)
+        filtreQuery = filtreQuery.lte("date", filtreDateFin)
+      }
+      if (filtreTypeCharge) {
+        pageQuery = pageQuery.eq("type_charge", filtreTypeCharge)
+        filtreQuery = filtreQuery.eq("type_charge", filtreTypeCharge)
+      }
+      if (filtreSousType) {
+        pageQuery = pageQuery.eq("sous_type", filtreSousType)
+        filtreQuery = filtreQuery.eq("sous_type", filtreSousType)
+      }
+      if (filtreEquipementId) {
+        pageQuery = pageQuery.eq("equipement_id", filtreEquipementId).eq("type_charge", "equipement")
+        filtreQuery = filtreQuery.eq("equipement_id", filtreEquipementId).eq("type_charge", "equipement")
+      }
+
+      const [
+        { data: pageData, error, count },
+        { data: globalData },
+        { data: filtreData },
+      ] = await Promise.all([pageQuery, globalQuery, filtreQuery])
 
       if (error) {
         console.error("Erreur chargement charges:", error)
         setMessageType("error")
         setMessage("Erreur lors du chargement des charges")
       } else {
-        setCharges(data || [])
+        setCharges(pageData || [])
+        setTotalCount(count || 0)
+        setTotalMontantGlobal((globalData || []).reduce((s, c) => s + (Number(c.montant_dt) || 0), 0))
+        setTotalMontantFiltre((filtreData || []).reduce((s, c) => s + (Number(c.montant_dt) || 0), 0))
       }
       setLoadingCharges(false)
     }
     loadCharges()
-  }, [campagneId])
+  }, [campagneId, page, filtreDateDebut, filtreDateFin, filtreTypeCharge, filtreSousType, filtreEquipementId, sortConfig, refreshKey])
 
-  async function reloadCharges() {
-    const { data } = await supabase
-      .from("charge")
-      .select("*")
-      .eq("campagne_id", campagneId)
-      .order("date", { ascending: true })
-    setCharges(data || [])
+  function reloadCharges() {
+    setRefreshKey(k => k + 1)
   }
 
   function resetForm() {
@@ -439,97 +487,7 @@ function FormulaireCharges() {
     return sortConfig.direction === "asc" ? "↑" : "↓"
   }
 
-  const chargesFiltreesEtTriees = useMemo(() => {
-    let list = [...charges]
-
-    // Filtres
-    list = list.filter((ch) => {
-      if (filtreDateDebut && ch.date < filtreDateDebut) return false
-      if (filtreDateFin && ch.date > filtreDateFin) return false
-      if (filtreTypeCharge && ch.type_charge !== filtreTypeCharge)
-        return false
-      if (filtreSousType && ch.sous_type !== filtreSousType) return false
-      if (
-        filtreEquipementId &&
-        ch.type_charge === "equipement" &&
-        ch.equipement_id !== filtreEquipementId
-      )
-        return false
-      if (
-        filtreEquipementId &&
-        ch.type_charge !== "equipement"
-      )
-        return false
-      return true
-    })
-
-    // Tri
-    list.sort((a, b) => {
-      const { key, direction } = sortConfig
-      const dir = direction === "asc" ? 1 : -1
-
-      let valA
-      let valB
-
-      switch (key) {
-        case "date":
-          valA = a.date || ""
-          valB = b.date || ""
-          break
-        case "type_charge":
-          valA = formatTypeLabel(a.type_charge)
-          valB = formatTypeLabel(b.type_charge)
-          break
-        case "sous_type":
-          valA = formatSousTypeLabel(a.type_charge, a.sous_type)
-          valB = formatSousTypeLabel(b.type_charge, b.sous_type)
-          break
-        case "equipement":
-          valA =
-            a.type_charge === "equipement" && a.equipement_id
-              ? equipementMap[a.equipement_id] || ""
-              : ""
-          valB =
-            b.type_charge === "equipement" && b.equipement_id
-              ? equipementMap[b.equipement_id] || ""
-              : ""
-          break
-        case "montant_dt":
-          valA = Number(a.montant_dt) || 0
-          valB = Number(b.montant_dt) || 0
-          break
-        case "nb_ouvriers":
-          valA = a.nb_ouvriers || 0
-          valB = b.nb_ouvriers || 0
-          break
-        case "beneficiaire":
-          valA = a.beneficiaire || ""
-          valB = b.beneficiaire || ""
-          break
-        default:
-          valA = ""
-          valB = ""
-      }
-
-      if (valA < valB) return -1 * dir
-      if (valA > valB) return 1 * dir
-      return 0
-    })
-
-    return list
-  }, [
-    charges,
-    filtreDateDebut,
-    filtreDateFin,
-    filtreTypeCharge,
-    filtreSousType,
-    filtreEquipementId,
-    sortConfig,
-    equipementMap,
-  ])
-
-  const totalPages = Math.max(1, Math.ceil(chargesFiltreesEtTriees.length / PAGE_SIZE))
-  const chargesPaginees = chargesFiltreesEtTriees.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
 
   function getPageNumbers() {
     if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1)
@@ -541,38 +499,11 @@ function FormulaireCharges() {
     return pages
   }
 
-  const totalCharges = charges.reduce(
-    (sum, ch) => sum + (Number(ch.montant_dt) || 0),
-    0
-  )
+  // Sous-types disponibles dans la modal de filtres (statiques par type)
+  const sousTypesPourFiltreModal = SOUS_TYPES_PAR_TYPE[tempFiltreTypeCharge] || []
 
-  const totalFiltres = chargesFiltreesEtTriees.reduce(
-    (sum, ch) => sum + (Number(ch.montant_dt) || 0),
-    0
-  )
-
-  // Sous-types disponibles dans la modal de filtres (dépend du type temp sélectionné)
-  const sousTypesPourFiltreModal = useMemo(() => {
-    const set = new Set()
-    charges.forEach((ch) => {
-      if (!ch.sous_type) return
-      if (tempFiltreTypeCharge && ch.type_charge !== tempFiltreTypeCharge)
-        return
-      set.add(ch.sous_type)
-    })
-    return Array.from(set)
-  }, [charges, tempFiltreTypeCharge])
-
-  // Équipements pour le filtre (uniquement charges de type equipement)
-  const equipementsPourFiltre = useMemo(() => {
-    const setIds = new Set()
-    charges.forEach((ch) => {
-      if (ch.type_charge === "equipement" && ch.equipement_id) {
-        setIds.add(ch.equipement_id)
-      }
-    })
-    return equipements.filter((eq) => setIds.has(eq.id))
-  }, [charges, equipements])
+  // Équipements pour le filtre
+  const equipementsPourFiltre = equipements
 
   const hasActiveFilters = !!(
     filtreDateDebut ||
@@ -688,7 +619,7 @@ function FormulaireCharges() {
           Total des charges pour la campagne{" "}
           {campagneSelectionnee ? campagneSelectionnee.annee : "-"} :{" "}
           <span className="font-semibold">
-            {totalCharges.toLocaleString("fr-FR", {
+            {totalMontantGlobal.toLocaleString("fr-FR", {
               minimumFractionDigits: 3,
               maximumFractionDigits: 3,
             })}{" "}
@@ -699,7 +630,7 @@ function FormulaireCharges() {
           <p className="mt-1 text-xs text-gray-500">
             Total sur les filtres courants :{" "}
             <span className="font-semibold">
-              {totalFiltres.toLocaleString("fr-FR", {
+              {totalMontantFiltre.toLocaleString("fr-FR", {
                 minimumFractionDigits: 3,
                 maximumFractionDigits: 3,
               })}{" "}
@@ -888,7 +819,7 @@ function FormulaireCharges() {
       <div className="mt-4">
         {loadingCharges ? (
           <p className="text-sm text-gray-500">Chargement des charges...</p>
-        ) : chargesFiltreesEtTriees.length === 0 ? (
+        ) : totalCount === 0 ? (
           <p className="text-sm text-gray-500">
             Aucune charge ne correspond aux filtres pour cette campagne.
           </p>
@@ -949,7 +880,7 @@ function FormulaireCharges() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 bg-white">
-                {chargesPaginees.map((ch) => (
+                {charges.map((ch) => (
                   <tr key={ch.id}>
                     <td className="px-3 py-2 text-gray-800">{formatDate(ch.date)}</td>
                     <td className="px-3 py-2 text-gray-800">
@@ -1001,7 +932,7 @@ function FormulaireCharges() {
           {totalPages > 1 && (
             <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mt-3 px-1">
               <p className="text-sm text-gray-500">
-                {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, chargesFiltreesEtTriees.length)} sur {chargesFiltreesEtTriees.length} charges
+                {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, totalCount)} sur {totalCount} charges
               </p>
               <div className="flex items-center gap-1">
                 <button
