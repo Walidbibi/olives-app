@@ -75,7 +75,7 @@ resume | campagnes | recolte | ventes | charges
 Revue complète effectuée. Liste priorisée à implémenter lors des prochaines sessions.
 
 ### HAUTE priorité (bloquant pour l'usage mobile)
-- [ ] **Tables → cards sur mobile** : Les tableaux Récolte, Ventes, Charges nécessitent un scroll horizontal sur téléphone. Basculer vers une vue en cartes sur petit écran (<768px).
+- [x] **Tables → cards sur mobile** : Les tableaux Récolte, Ventes, Charges nécessitent un scroll horizontal sur téléphone. Basculer vers une vue en cartes sur petit écran (<768px). ✅ Fait en session 2026-05-10 — tableau masqué sur mobile (hidden md:block), cartes affichées (md:hidden) avec layout date/infos/quantité/actions.
 - [ ] **Validation temps réel des formulaires** : Les erreurs n'apparaissent qu'au submit. Ajouter validation pendant la saisie.
 - [x] **Messages de chargement spécifiques** : Remplacer "Chargement..." par des messages précis ("Chargement des récoltes..."). Afficher une erreur visible si la requête échoue (pas de spinner infini). ✅ Fait en session 2026-05-10 — messages précis dans tous les formulaires + DashboardTracteur, bouton Réessayer sur l'écran d'erreur global.
 - [x] **Selects filtrables** : Les listes déroulantes (équipements, parcelles) ne sont pas recherchables. Ajouter un champ de recherche/autocomplete. ✅ Fait en session 2026-05-10 — composant SearchableSelect réutilisable, appliqué sur 5 selects (parcelles × 3, équipements × 2).
