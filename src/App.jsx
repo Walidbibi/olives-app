@@ -7,6 +7,8 @@ import FormulaireCharges from "./FormulaireCharges"
 import Resume from "./Resume"
 import ProfilExploitation from "./ProfilExploitation"
 import DashboardTracteur from "./DashboardTracteur"
+//import AssistantPanel from "./AssistantPanel";
+import { Sprout } from "lucide-react";
 
 
 const onglets = [
@@ -20,12 +22,13 @@ const onglets = [
 ]
 
 function App() {
-  const { loading: globalLoading, error: globalError } = useAppData()
+  const { loading: globalLoading, error: globalError, refetch } = useAppData()
 
   const [ongletActif, setOngletActif] = useState("resume")
   const [ongletPrecedent, setOngletPrecedent] = useState("resume")
   const [recoltePourVente, setRecoltePourVente] = useState(null)
   const [tracteurSelectionne, setTracteurSelectionne] = useState(null)
+  const [assistantOpen, setAssistantOpen] = useState(false);
   const changerOnglet = (id) => {
     setOngletActif(id)
   }
@@ -59,6 +62,25 @@ function App() {
         <p className="loading-screen-subtitle" style={{ color: "#ef4444" }}>
           Impossible de charger les données depuis la base.
         </p>
+        <p className="loading-screen-message" style={{ color: "#9ca3af", fontSize: "0.75rem" }}>
+          {globalError.message || "Erreur inconnue"}
+        </p>
+        <button
+          onClick={refetch}
+          style={{
+            marginTop: "1.5rem",
+            padding: "0.5rem 1.5rem",
+            background: "#b91c1c",
+            color: "white",
+            borderRadius: "0.5rem",
+            border: "none",
+            cursor: "pointer",
+            fontSize: "0.875rem",
+            fontWeight: 600,
+          }}
+        >
+          Réessayer
+        </button>
       </div>
     )
   }
@@ -76,14 +98,28 @@ function App() {
           </div>
 
           {/* Bouton Mon profil UNIQUEMENT dans la barre verte */}
-          <button
-            type="button"
-            onClick={() => setOngletActif("profil")}
-            className="inline-flex items-center gap-2 rounded-full bg-olive-600 px-3 py-1.5 text-xs sm:text-sm font-medium text-white shadow hover:bg-olive-500 focus:outline-none focus:ring-2 focus:ring-olive-300"
-          >
-            <span>👤</span>
-            <span>Mon profil</span>
-          </button>
+          {/* Boutons header : Assistant + Mon profil */}
+          /*<div className="flex items-center gap-2">
+            {/* Bouton Assistant */}
+            <button
+              type="button"
+              onClick={() => setAssistantOpen(true)}
+              className="inline-flex items-center gap-2 rounded-full bg-olive-600 px-3 py-1.5 text-xs sm:text-sm font-medium text-white shadow hover:bg-olive-500 focus:outline-none focus:ring-2 focus:ring-olive-300"
+            >
+              <Sprout size={16} />
+              <span>Assistant</span>
+            </button>*/
+
+            {/* Bouton Mon profil */}
+            <button
+              type="button"
+              onClick={() => setOngletActif("profil")}
+              className="inline-flex items-center gap-2 rounded-full bg-olive-600 px-3 py-1.5 text-xs sm:text-sm font-medium text-white shadow hover:bg-olive-500 focus:outline-none focus:ring-2 focus:ring-olive-300"
+            >
+              <span>👤</span>
+              <span>Mon profil</span>
+            </button>
+          </div>
         </div>
       </header>
 
@@ -162,6 +198,8 @@ function App() {
       <footer className="bg-gray-800 text-gray-300 text-center py-4 mt-8">
         <p className="text-sm">Olive App - &copy; 2026</p>
       </footer>
+      {/* Assistant Panel */}
+      
     </div>
   )
 }

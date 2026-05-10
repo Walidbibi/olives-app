@@ -637,7 +637,7 @@ function FormulaireCharges() {
               Campagne
             </label>
             {loadingCampagnes ? (
-              <div className="text-sm text-gray-500">Chargement...</div>
+              <div className="text-sm text-gray-500">Chargement des campagnes...</div>
             ) : campagnes.length === 0 ? (
               <div className="text-sm text-red-500">
                 Aucune campagne disponible.

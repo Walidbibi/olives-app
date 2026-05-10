@@ -370,7 +370,7 @@ function DashboardTracteur({ equipement, onRetourProfil }) {
             <div>
               <p className="text-[11px] font-medium text-gray-600 mb-0.5">Campagne</p>
               {loadingCampagnes ? (
-                <p className="text-[11px] text-gray-500">Chargement...</p>
+                <p className="text-[11px] text-gray-500">Chargement des campagnes...</p>
               ) : campagnesError ? (
                 <p className="text-[11px] text-red-600">{campagnesError}</p>
               ) : (
@@ -435,7 +435,7 @@ function DashboardTracteur({ equipement, onRetourProfil }) {
         <div className="bg-white border border-gray-200 rounded-lg px-3 py-3 shadow-sm">
           <p className="text-xs text-gray-500 uppercase tracking-wide">Gain net</p>
           {loadingActivites || loadingCharges ? (
-            <p className="mt-2 text-sm text-gray-500">Chargement...</p>
+            <p className="mt-2 text-sm text-gray-500">Chargement des données...</p>
           ) : activitesError || chargesError ? (
             <p className="mt-2 text-xs text-red-600">Erreur de calcul</p>
           ) : (
@@ -450,7 +450,7 @@ function DashboardTracteur({ equipement, onRetourProfil }) {
         <div className="bg-white border border-gray-200 rounded-lg px-3 py-3 shadow-sm">
           <p className="text-xs text-gray-500 uppercase tracking-wide">Recettes location</p>
           {loadingActivites ? (
-            <p className="mt-2 text-sm text-gray-500">Chargement...</p>
+            <p className="mt-2 text-sm text-gray-500">Chargement des activités...</p>
           ) : activitesError ? (
             <p className="mt-2 text-xs text-red-600">{activitesError}</p>
           ) : (
@@ -470,7 +470,7 @@ function DashboardTracteur({ equipement, onRetourProfil }) {
         <div className="bg-white border border-gray-200 rounded-lg px-3 py-3 shadow-sm flex flex-col">
           <p className="text-xs text-gray-500 uppercase tracking-wide">Total charges</p>
           {loadingCharges ? (
-            <p className="mt-2 text-sm text-gray-500">Chargement...</p>
+            <p className="mt-2 text-sm text-gray-500">Chargement des charges...</p>
           ) : chargesError ? (
             <p className="mt-2 text-xs text-red-600">{chargesError}</p>
           ) : (
@@ -490,7 +490,7 @@ function DashboardTracteur({ equipement, onRetourProfil }) {
         <div className="bg-white border border-gray-200 rounded-lg px-3 py-3 shadow-sm flex flex-col">
           <p className="text-xs text-gray-500 uppercase tracking-wide">Oliviers traités</p>
           {loadingActivites ? (
-            <p className="mt-2 text-sm text-gray-500">Chargement...</p>
+            <p className="mt-2 text-sm text-gray-500">Chargement des activités...</p>
           ) : activitesError ? (
             <p className="mt-2 text-xs text-red-600">{activitesError}</p>
           ) : (
@@ -514,7 +514,7 @@ function DashboardTracteur({ equipement, onRetourProfil }) {
       {/* MODAL détail : recettes location */}
       <Modal isOpen={showRecettesDetail} onClose={() => setShowRecettesDetail(false)} title="Détail des recettes location" size="xlarge">
         {loadingActivites ? (
-          <p className="py-6 text-sm text-gray-500">Chargement...</p>
+          <p className="py-6 text-sm text-gray-500">Chargement des activités...</p>
         ) : activites.filter((a) => a.type_activite === "sous_traitance").length === 0 ? (
           <p className="py-6 text-sm text-gray-400 text-center">Aucune activité de sous-traitance pour cette sélection.</p>
         ) : (
@@ -567,7 +567,7 @@ function DashboardTracteur({ equipement, onRetourProfil }) {
       {/* MODAL détail : charges tracteurs */}
       <Modal isOpen={showChargesDetail} onClose={() => setShowChargesDetail(false)} title="Détail des charges tracteur" size="xlarge">
         {loadingCharges ? (
-          <p className="py-6 text-sm text-gray-500">Chargement...</p>
+          <p className="py-6 text-sm text-gray-500">Chargement des charges...</p>
         ) : chargesDetail.length === 0 ? (
           <p className="py-6 text-sm text-gray-400 text-center">Aucune charge enregistrée pour cette sélection.</p>
         ) : (
@@ -608,7 +608,7 @@ function DashboardTracteur({ equipement, onRetourProfil }) {
       {/* MODAL détail : activités (oliviers traités) */}
       <Modal isOpen={showActivitesDetail} onClose={() => setShowActivitesDetail(false)} title="Détail des activités tracteur" size="xlarge">
         {loadingActivites ? (
-          <p className="py-6 text-sm text-gray-500">Chargement...</p>
+          <p className="py-6 text-sm text-gray-500">Chargement des activités...</p>
         ) : activites.length === 0 ? (
           <p className="py-6 text-sm text-gray-400 text-center">Aucune activité enregistrée pour cette sélection.</p>
         ) : (
@@ -672,7 +672,7 @@ function DashboardTracteur({ equipement, onRetourProfil }) {
       <section className="bg-white border border-gray-200 rounded-lg px-4 py-4 shadow-sm mb-4">
         <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Impact du tracteur sur votre CA</p>
         {loadingActivites || loadingCharges ? (
-          <p className="text-sm text-gray-500">Chargement...</p>
+          <p className="text-sm text-gray-500">Chargement des données...</p>
         ) : (
           <>
             <p className={`text-2xl font-semibold ${impactTracteur >= 0 ? "text-emerald-700" : "text-red-600"}`}>
@@ -944,7 +944,7 @@ function DashboardTracteur({ equipement, onRetourProfil }) {
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">Campagne</label>
             {loadingCampagnes ? (
-              <p className="text-xs text-gray-500">Chargement...</p>
+              <p className="text-xs text-gray-500">Chargement des campagnes...</p>
             ) : (
               <select value={chargeForm.campagne_id}
                 onChange={(e) => setChargeForm((p) => ({ ...p, campagne_id: e.target.value }))}
