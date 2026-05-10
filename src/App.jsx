@@ -33,6 +33,25 @@ function App() {
     setOngletActif(id)
   }
 
+  function getBreadcrumb() {
+    if (ongletActif === "profil") {
+      return [{ label: "Mon profil", onClick: null }]
+    }
+    if (ongletActif === "dashboard_tracteur") {
+      const items = ongletPrecedent === "profil"
+        ? [
+            { label: "Mon profil", onClick: () => setOngletActif("profil") },
+            { label: "Équipements", onClick: () => setOngletActif("profil") },
+          ]
+        : [{ label: "Résumé", onClick: () => setOngletActif("resume") }]
+      items.push({ label: tracteurSelectionne?.nom || "Dashboard tracteur", onClick: null })
+      return items
+    }
+    return []
+  }
+
+  const breadcrumb = getBreadcrumb()
+
   if (globalLoading) {
     return (
       <div className="loading-screen">
@@ -131,6 +150,26 @@ function App() {
           </div>
         </div>
       </nav>
+
+      {/* Fil d'Ariane */}
+      {breadcrumb.length > 0 && (
+        <div className="bg-white border-b border-gray-100">
+          <div className="max-w-6xl mx-auto px-4 py-2 flex items-center gap-1 text-sm text-gray-500">
+            {breadcrumb.map((item, i) => (
+              <span key={i} className="flex items-center gap-1">
+                {i > 0 && <span className="text-gray-300 select-none">›</span>}
+                {item.onClick ? (
+                  <button onClick={item.onClick} className="hover:text-olive-700 hover:underline transition-colors">
+                    {item.label}
+                  </button>
+                ) : (
+                  <span className="text-gray-900 font-medium">{item.label}</span>
+                )}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Contenu principal */}
       <main className="max-w-6xl mx-auto px-4 py-6">
