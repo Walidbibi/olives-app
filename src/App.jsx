@@ -7,6 +7,7 @@ import FormulaireCharges from "./FormulaireCharges"
 import Resume from "./Resume"
 import ProfilExploitation from "./ProfilExploitation"
 import DashboardTracteur from "./DashboardTracteur"
+import CarteExploitation from "./CarteExploitation"
 //import AssistantPanel from "./AssistantPanel";
 import { Sprout } from "lucide-react";
 
@@ -18,6 +19,7 @@ const onglets = [
   { id: "recolte", label: "Récolte", icon: "🫒" },
   { id: "ventes", label: "Ventes", icon: "💰" },
   { id: "charges", label: "Charges", icon: "📉" },
+  { id: "carte", label: "Carte", icon: "🗺️" },
   // IMPORTANT : pas d'entrée "profil" ici
 ]
 
@@ -162,6 +164,8 @@ function App() {
         )}
 
         {ongletActif === "charges" && <FormulaireCharges />}
+
+        {ongletActif === "carte" && <CarteExploitation />}
 
         {ongletActif === "profil" && (
   <ProfilExploitation
