@@ -53,6 +53,7 @@ function FormulaireRecolte({ onDemanderVente }) {
   const [filtreParcelleId, setFiltreParcelleId] = useState("")
   const [filtreTypeOlive, setFiltreTypeOlive] = useState("")
   const [filtreDestination, setFiltreDestination] = useState("")
+  const [filtreEstVendu, setFiltreEstVendu] = useState("")
 
   // Tri
   const [sortKey, setSortKey] = useState("date")
@@ -63,6 +64,7 @@ function FormulaireRecolte({ onDemanderVente }) {
   const [tempFiltreParcelleId, setTempFiltreParcelleId] = useState("")
   const [tempFiltreTypeOlive, setTempFiltreTypeOlive] = useState("")
   const [tempFiltreDestination, setTempFiltreDestination] = useState("")
+  const [tempFiltreEstVendu, setTempFiltreEstVendu] = useState("")
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
   const [recolteASupprimer, setRecolteASupprimer] = useState(null)
@@ -206,6 +208,11 @@ function FormulaireRecolte({ onDemanderVente }) {
         filtreQuery = filtreQuery.eq("destination", filtreDestination)
       }
 
+      if (filtreEstVendu !== "") {
+        pageQuery = pageQuery.eq("est_vendu", filtreEstVendu === "true")
+        filtreQuery = filtreQuery.eq("est_vendu", filtreEstVendu === "true")
+      }
+
       const [
         { data: pageData, error, count },
         { data: globalData },
@@ -243,6 +250,7 @@ function FormulaireRecolte({ onDemanderVente }) {
     filtreParcelleId,
     filtreTypeOlive,
     filtreDestination,
+    filtreEstVendu,
     refreshKey,
     sortKey,
     sortDir,
@@ -630,13 +638,14 @@ function FormulaireRecolte({ onDemanderVente }) {
   }
 
   const hasActiveFilters =
-    !!filtreParcelleId || !!filtreTypeOlive || !!filtreDestination
+    !!filtreParcelleId || !!filtreTypeOlive || !!filtreDestination || filtreEstVendu !== ""
 
   const nombreFiltresActifs = [
     filtreParcelleId,
     filtreTypeOlive,
     filtreDestination,
-  ].filter(Boolean).length
+    filtreEstVendu,
+  ].filter(v => v !== "").length
 
   function handleResetFilters() {
     setFiltreParcelleId("")
@@ -649,6 +658,7 @@ function FormulaireRecolte({ onDemanderVente }) {
     setTempFiltreParcelleId(filtreParcelleId || "")
     setTempFiltreTypeOlive(filtreTypeOlive || "")
     setTempFiltreDestination(filtreDestination || "")
+    setTempFiltreEstVendu(filtreEstVendu)
     setFiltersModalOpen(true)
   }
 
@@ -656,6 +666,7 @@ function FormulaireRecolte({ onDemanderVente }) {
     setFiltreParcelleId(tempFiltreParcelleId || "")
     setFiltreTypeOlive(tempFiltreTypeOlive || "")
     setFiltreDestination(tempFiltreDestination || "")
+    setFiltreEstVendu(tempFiltreEstVendu)
     setPageCourante(1)
     setFiltersModalOpen(false)
   }
@@ -813,6 +824,15 @@ function FormulaireRecolte({ onDemanderVente }) {
                 }}
               />
             )}
+            {filtreEstVendu !== "" && (
+              <Tag
+                text={`Statut: ${filtreEstVendu === "true" ? "Vendu" : "Non vendu"}`}
+                onRemove={() => {
+                  setFiltreEstVendu("")
+                  setPageCourante(1)
+                }}
+              />
+            )}
           </div>
         )}
       </div>
@@ -825,7 +845,7 @@ function FormulaireRecolte({ onDemanderVente }) {
         size="medium"
       >
         <div className="space-y-4">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <div>
               <label className="block text-xs font-medium text-gray-600">
                 Parcelle
@@ -866,7 +886,21 @@ function FormulaireRecolte({ onDemanderVente }) {
                 <option value="">Toutes les destinations</option>
                 <option value="vente_brut">Vente brute</option>
                 <option value="huile_perso">Huile - Perso</option>
+              </select>
+            </div>
 
+            <div>
+              <label className="block text-xs font-medium text-gray-600">
+                Statut vente
+              </label>
+              <select
+                value={tempFiltreEstVendu}
+                onChange={(e) => setTempFiltreEstVendu(e.target.value)}
+                className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm shadow-sm focus:border-olive-500 focus:ring-olive-500"
+              >
+                <option value="">Tous les statuts</option>
+                <option value="false">Non vendu</option>
+                <option value="true">Vendu</option>
               </select>
             </div>
           </div>
