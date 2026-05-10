@@ -907,19 +907,16 @@ function FormulaireRecolte({ onDemanderVente }) {
               const statutVenteLabel = isHuilePerso ? "Non concernée" : r.est_vendu ? "Vendu" : "Disponible"
               return (
                 <div key={r.id} className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
-                  {/* Ligne infos : toutes les métadonnées sur une seule ligne */}
+                  {/* Date */}
+                  <p className="text-sm font-semibold text-gray-900 mb-1">{formatDate(r.date)}</p>
+                  {/* Infos */}
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-2">
-                    <span className="text-sm font-semibold text-gray-900">{formatDate(r.date)}</span>
-                    <span className="text-gray-300">·</span>
                     {renderParcelleBadge(r.parcelle_id)}
-                    <span className="text-gray-300">·</span>
                     {renderTypeBadge(r.type_olive)}
-                    <span className="text-gray-300">·</span>
                     <span className="text-xs text-gray-500">{renderDestinationLabel(r.destination)}</span>
-                    <span className="text-gray-300">·</span>
                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${r.est_vendu ? "bg-green-100 text-green-700" : isHuilePerso ? "bg-purple-100 text-purple-700" : "bg-orange-100 text-orange-700"}`}>{statutVenteLabel}</span>
                   </div>
-                  {/* Quantité prominente */}
+                  {/* Quantité */}
                   <p className="text-2xl font-bold text-gray-900 mb-3">
                     {r.quantite_kg?.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg
                   </p>
