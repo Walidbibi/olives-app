@@ -63,6 +63,8 @@ function DashboardTracteur({ equipement, onRetourProfil }) {
   const [activites, setActivites] = useState([])
   const [loadingActivites, setLoadingActivites] = useState(false)
   const [activitesError, setActivitesError] = useState(null)
+  const [activitePage, setActivitePage] = useState(0)
+  const ACTIVITES_PAGE_SIZE = 10
 
   // Modal charge salaire chauffeur
   const [chargeModalOpen, setChargeModalOpen] = useState(false)
@@ -183,6 +185,8 @@ function DashboardTracteur({ equipement, onRetourProfil }) {
     }
     loadActivites()
   }, [equipement, campagneId, refreshKey])
+
+  useEffect(() => { setActivitePage(0) }, [activites])
 
   // Charger les charges de tous les tracteurs (détail complet)
   useEffect(() => {
@@ -611,61 +615,95 @@ function DashboardTracteur({ equipement, onRetourProfil }) {
           <p className="py-6 text-sm text-gray-500">Chargement des activités...</p>
         ) : activites.length === 0 ? (
           <p className="py-6 text-sm text-gray-400 text-center">Aucune activité enregistrée pour cette sélection.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="bg-gray-50 text-gray-500 uppercase tracking-wide">
-                  <th className="px-3 py-2 text-left font-medium">Date</th>
-                  <th className="px-3 py-2 text-left font-medium">Campagne</th>
-                  <th className="px-3 py-2 text-left font-medium">Type</th>
-                  <th className="px-3 py-2 text-right font-medium">Oliviers</th>
-                  <th className="px-3 py-2 text-right font-medium">Prix/olivier</th>
-                  <th className="px-3 py-2 text-right font-medium">Montant</th>
-                  <th className="px-3 py-2 text-left font-medium">Commentaire</th>
-                  <th className="px-3 py-2"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {activites.map((a) => {
-                  const montant = (parseInt(a.nb_oliviers, 10) || 0) * (parseFloat(a.prix_par_olivier) || 0)
-                  return (
-                    <tr key={a.id} className="hover:bg-gray-50">
-                      <td className="px-3 py-2 text-gray-800 whitespace-nowrap">{a.date_activite}</td>
-                      <td className="px-3 py-2 text-gray-600">{campagneMap[a.campagne_id] ?? "-"}</td>
-                      <td className="px-3 py-2">
-                        {a.type_activite === "sous_traitance" ? (
-                          <span className="inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-medium text-indigo-700">Sous-traitance</span>
-                        ) : (
-                          <span className="inline-flex items-center rounded-full bg-olive-50 px-2 py-0.5 text-[10px] font-medium text-olive-700">Mes parcelles</span>
-                        )}
-                      </td>
-                      <td className="px-3 py-2 text-right text-gray-800">{Number(a.nb_oliviers).toLocaleString("fr-FR")}</td>
-                      <td className="px-3 py-2 text-right text-gray-600">{fmt(parseFloat(a.prix_par_olivier) || 0)} DT</td>
-                      <td className="px-3 py-2 text-right font-medium text-gray-800">{fmt(montant)} DT</td>
-                      <td className="px-3 py-2 text-gray-500 max-w-40 truncate">{a.commentaire || "—"}</td>
-                      <td className="px-3 py-2 whitespace-nowrap text-right">
-                        <button type="button" onClick={() => { setShowActivitesDetail(false); handleOpenEditModal(a) }} className="text-indigo-600 hover:underline mr-3">Modifier</button>
-                        <button type="button" onClick={() => handleDelete(a)} disabled={deletingId === a.id} className="text-red-500 hover:underline disabled:opacity-50">
-                          {deletingId === a.id ? "..." : "Supprimer"}
-                        </button>
-                      </td>
+        ) : (() => {
+          const totalPages = Math.ceil(activites.length / ACTIVITES_PAGE_SIZE)
+          const pageActivites = activites.slice(activitePage * ACTIVITES_PAGE_SIZE, (activitePage + 1) * ACTIVITES_PAGE_SIZE)
+          return (
+            <>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="bg-gray-50 text-gray-500 uppercase tracking-wide">
+                      <th className="px-3 py-2 text-left font-medium">Date</th>
+                      <th className="px-3 py-2 text-left font-medium">Campagne</th>
+                      <th className="px-3 py-2 text-left font-medium">Type</th>
+                      <th className="px-3 py-2 text-right font-medium">Oliviers</th>
+                      <th className="px-3 py-2 text-right font-medium">Prix/olivier</th>
+                      <th className="px-3 py-2 text-right font-medium">Montant</th>
+                      <th className="px-3 py-2 text-left font-medium">Commentaire</th>
+                      <th className="px-3 py-2"></th>
                     </tr>
-                  )
-                })}
-              </tbody>
-              <tfoot>
-                <tr className="bg-gray-50 font-semibold">
-                  <td colSpan={3} className="px-3 py-2 text-xs text-gray-700">Total</td>
-                  <td className="px-3 py-2 text-right text-xs text-gray-900">{totalOliviersTracteur.toLocaleString("fr-FR")} oliviers</td>
-                  <td />
-                  <td className="px-3 py-2 text-right text-xs text-gray-900">{fmt(recettesLocation)} DT</td>
-                  <td colSpan={2} />
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-        )}
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {pageActivites.map((a) => {
+                      const montant = (parseInt(a.nb_oliviers, 10) || 0) * (parseFloat(a.prix_par_olivier) || 0)
+                      return (
+                        <tr key={a.id} className="hover:bg-gray-50">
+                          <td className="px-3 py-2 text-gray-800 whitespace-nowrap">{a.date_activite}</td>
+                          <td className="px-3 py-2 text-gray-600">{campagneMap[a.campagne_id] ?? "-"}</td>
+                          <td className="px-3 py-2">
+                            {a.type_activite === "sous_traitance" ? (
+                              <span className="inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-medium text-indigo-700">Sous-traitance</span>
+                            ) : (
+                              <span className="inline-flex items-center rounded-full bg-olive-50 px-2 py-0.5 text-[10px] font-medium text-olive-700">Mes parcelles</span>
+                            )}
+                          </td>
+                          <td className="px-3 py-2 text-right text-gray-800">{Number(a.nb_oliviers).toLocaleString("fr-FR")}</td>
+                          <td className="px-3 py-2 text-right text-gray-600">{fmt(parseFloat(a.prix_par_olivier) || 0)} DT</td>
+                          <td className="px-3 py-2 text-right font-medium text-gray-800">{fmt(montant)} DT</td>
+                          <td className="px-3 py-2 text-gray-500 max-w-40 truncate">{a.commentaire || "—"}</td>
+                          <td className="px-3 py-2 whitespace-nowrap text-right">
+                            <button type="button" onClick={() => { setShowActivitesDetail(false); handleOpenEditModal(a) }} className="text-indigo-600 hover:underline mr-3">Modifier</button>
+                            <button type="button" onClick={() => handleDelete(a)} disabled={deletingId === a.id} className="text-red-500 hover:underline disabled:opacity-50">
+                              {deletingId === a.id ? "..." : "Supprimer"}
+                            </button>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                  <tfoot>
+                    <tr className="bg-gray-50 font-semibold">
+                      <td colSpan={3} className="px-3 py-2 text-xs text-gray-700">Total</td>
+                      <td className="px-3 py-2 text-right text-xs text-gray-900">{totalOliviersTracteur.toLocaleString("fr-FR")} oliviers</td>
+                      <td />
+                      <td className="px-3 py-2 text-right text-xs text-gray-900">{fmt(recettesLocation)} DT</td>
+                      <td colSpan={2} />
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
+                  <p className="text-xs text-gray-500">
+                    {activitePage * ACTIVITES_PAGE_SIZE + 1}–{Math.min((activitePage + 1) * ACTIVITES_PAGE_SIZE, activites.length)} sur {activites.length} activités
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setActivitePage((p) => p - 1)}
+                      disabled={activitePage === 0}
+                      className="px-2 py-1 text-xs rounded border border-gray-300 text-gray-600 disabled:opacity-40 hover:bg-gray-50"
+                    >
+                      ← Précédent
+                    </button>
+                    <span className="px-2 py-1 text-xs text-gray-500">
+                      {activitePage + 1} / {totalPages}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setActivitePage((p) => p + 1)}
+                      disabled={activitePage >= totalPages - 1}
+                      className="px-2 py-1 text-xs rounded border border-gray-300 text-gray-600 disabled:opacity-40 hover:bg-gray-50"
+                    >
+                      Suivant →
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          )
+        })()}
       </Modal>
 
       {/* Impact tracteur sur le CA */}
