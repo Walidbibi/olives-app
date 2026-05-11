@@ -174,3 +174,22 @@ Ces fonctionnalités sont trop avancées pour l'exploitation familiale actuelle 
 - Chaque nouvelle fonctionnalité = nouvel onglet ou sous-section dans ProfilExploitation selon la complexité.
 - Réutiliser les patterns existants : FormulaireXxx.jsx pour les formulaires, DataProvider pour les données.
 - Vision long terme : deux versions de l'app — "petite exploitation" (actuelle) et "pro" pour grands agriculteurs.
+
+## Carte d'exploitation — Fonctionnalités identifiées (session 2026-05-10)
+Parcelle Sidi Amor délimitée avec 12 points GPS sur CarteExploitation.jsx (Leaflet + react-leaflet).
+Données de récolte au survol déjà implémentées (tooltip live depuis Supabase).
+
+### Faisable sans nouvelle API
+- [x] **Données de récolte au survol** : kg récolté, nb journées, détail par campagne. ✅ Fait session 2026-05-10.
+- [ ] **Code couleur performance** : Parcelle verte si rendement > moyenne campagne, orange si en dessous.
+- [ ] **Clic → fiche parcelle** : Modal avec historique récoltes, charges associées, graphique d'évolution.
+- [ ] **Surface calculée automatiquement** : Calculer l'hectarage réel depuis les coordonnées GPS (formule de Shoelace).
+
+### Nécessite données supplémentaires
+- [ ] **Récolte en cours en temps réel** : Afficher kg récoltés sur la parcelle pour la campagne active.
+- [ ] **Planning de taille sur carte** : Voir quelles parcelles sont taillées / à tailler (lié au planning de taille).
+- [ ] **Carnet de traitements sur carte** : Quelles parcelles traitées récemment, alertes DAR.
+
+### Vision long terme
+- [ ] **Multi-parcelles** : Ajouter les autres parcelles de l'exploitation avec leurs polygones GPS.
+- [ ] **Partage de carte** : Montrer la carte à un acheteur ou un expert agricole.
