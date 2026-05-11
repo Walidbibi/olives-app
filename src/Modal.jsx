@@ -1,4 +1,15 @@
+import { useEffect } from "react"
+
 function Modal({ isOpen, onClose, title, children, size = "default" }) {
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden"
+    } else {
+      document.body.style.overflow = ""
+    }
+    return () => { document.body.style.overflow = "" }
+  }, [isOpen])
+
   if (!isOpen) return null
 
   const maxWidth = size === "xlarge" ? "max-w-5xl" : size === "large" ? "max-w-2xl" : "max-w-lg"

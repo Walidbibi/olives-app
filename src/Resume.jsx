@@ -112,7 +112,7 @@ function Resume({ onNavigateTracteur }) {
         supabase.from("campagne").select("id, annee"),
         chargesQuery,
         autresRevenusQuery,
-        supabase.from("equipements").select("id, nom, type").ilike("type", "%tracteur%").order("created_at", { ascending: true }),
+        supabase.from("equipements").select("id, nom, type, prix_achat").ilike("type", "%tracteur%").order("created_at", { ascending: true }),
       ])
 
       setEquipements(equipementsData)

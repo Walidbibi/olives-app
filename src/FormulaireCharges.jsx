@@ -765,8 +765,8 @@ function FormulaireCharges() {
               >
                 <option value="">Tous les sous-types</option>
                 {sousTypesPourFiltreModal.map((st) => (
-                  <option key={st} value={st}>
-                    {formatSousTypeLabel(tempFiltreTypeCharge || "recolte", st)}
+                  <option key={st.value} value={st.value}>
+                    {st.label}
                   </option>
                 ))}
               </select>
