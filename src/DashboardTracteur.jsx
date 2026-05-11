@@ -82,6 +82,14 @@ function DashboardTracteur({ equipement, onRetourProfil }) {
   const [savingCharge, setSavingCharge] = useState(false)
   const [chargeFormError, setChargeFormError] = useState(null)
 
+  // Recettes location — pagination serveur (modal détail uniquement)
+  const RECETTES_PAGE_SIZE = 10
+  const [recettesPage, setRecettesPage] = useState(0)
+  const [recettesPageData, setRecettesPageData] = useState([])
+  const [recettesTotalCount, setRecettesTotalCount] = useState(0)
+  const [loadingRecettes, setLoadingRecettes] = useState(false)
+  const [recettesError, setRecettesError] = useState(null)
+
   // Charges tracteurs (liste complète pour total + détail)
   const [chargesDetail, setChargesDetail] = useState([])
   const [tracteurNomMap, setTracteurNomMap] = useState({})
@@ -197,6 +205,31 @@ function DashboardTracteur({ equipement, onRetourProfil }) {
   }, [equipement, campagneId, refreshKey])
 
   useEffect(() => { setActivitePage(0) }, [activites])
+
+  // Charger les recettes location (pagination serveur — modal uniquement)
+  useEffect(() => {
+    if (!showRecettesDetail || !equipement) return
+    async function loadRecettes() {
+      setLoadingRecettes(true)
+      setRecettesError(null)
+      let query = supabase
+        .from("activite_tracteur")
+        .select("*", { count: "exact" })
+        .eq("equipement_id", equipement.id)
+        .eq("type_activite", "sous_traitance")
+        .order("date_activite", { ascending: false })
+        .range(recettesPage * RECETTES_PAGE_SIZE, (recettesPage + 1) * RECETTES_PAGE_SIZE - 1)
+      if (campagneId) query = query.eq("campagne_id", campagneId)
+      const { data, count, error } = await query
+      setLoadingRecettes(false)
+      if (error) { setRecettesError("Impossible de charger les recettes."); return }
+      setRecettesPageData(data || [])
+      setRecettesTotalCount(count || 0)
+    }
+    loadRecettes()
+  }, [showRecettesDetail, recettesPage, equipement, campagneId, refreshKey])
+
+  useEffect(() => { setRecettesPage(0) }, [showRecettesDetail, campagneId])
 
   // Charger les charges de tous les tracteurs (détail complet)
   useEffect(() => {
@@ -357,6 +390,18 @@ function DashboardTracteur({ equipement, onRetourProfil }) {
 
   const fmt = (n, decimals = 2) =>
     n.toLocaleString("fr-FR", { minimumFractionDigits: decimals, maximumFractionDigits: decimals })
+
+  // page : 0-indexed, total : nb de pages — retourne tableau 1-indexed avec ellipsis
+  function getPageNums(page, total) {
+    const cur = page + 1
+    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
+    const pages = [1]
+    if (cur > 3) pages.push("…")
+    for (let i = Math.max(2, cur - 1); i <= Math.min(total - 1, cur + 1); i++) pages.push(i)
+    if (cur < total - 2) pages.push("…")
+    pages.push(total)
+    return pages
+  }
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
@@ -527,54 +572,116 @@ function DashboardTracteur({ equipement, onRetourProfil }) {
 
       {/* MODAL détail : recettes location */}
       <Modal isOpen={showRecettesDetail} onClose={() => setShowRecettesDetail(false)} title="Détail des recettes location" size="xlarge">
-        {loadingActivites ? (
-          <p className="py-6 text-sm text-gray-500">Chargement des activités...</p>
-        ) : activites.filter((a) => a.type_activite === "sous_traitance").length === 0 ? (
+        {loadingRecettes ? (
+          <p className="py-6 text-sm text-gray-500">Chargement des recettes...</p>
+        ) : recettesError ? (
+          <p className="py-6 text-sm text-red-500 text-center">{recettesError}</p>
+        ) : recettesTotalCount === 0 ? (
           <p className="py-6 text-sm text-gray-400 text-center">Aucune activité de sous-traitance pour cette sélection.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="bg-gray-50 text-gray-500 uppercase tracking-wide">
-                  <th className="px-3 py-2 text-left font-medium">Date</th>
-                  <th className="px-3 py-2 text-left font-medium">Campagne</th>
-                  <th className="px-3 py-2 text-right font-medium">Oliviers</th>
-                  <th className="px-3 py-2 text-right font-medium">Prix/olivier</th>
-                  <th className="px-3 py-2 text-right font-medium">Montant</th>
-                  <th className="px-3 py-2 text-left font-medium">Commentaire</th>
-                  <th className="px-3 py-2"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {activites.filter((a) => a.type_activite === "sous_traitance").map((a) => {
-                  const montant = (parseInt(a.nb_oliviers, 10) || 0) * (parseFloat(a.prix_par_olivier) || 0)
-                  return (
-                    <tr key={a.id} className="hover:bg-gray-50">
-                      <td className="px-3 py-2 text-gray-800 whitespace-nowrap">{a.date_activite}</td>
-                      <td className="px-3 py-2 text-gray-600">{campagneMap[a.campagne_id] ?? "-"}</td>
-                      <td className="px-3 py-2 text-right text-gray-800">{Number(a.nb_oliviers).toLocaleString("fr-FR")}</td>
-                      <td className="px-3 py-2 text-right text-gray-600">{fmt(parseFloat(a.prix_par_olivier) || 0)} DT</td>
-                      <td className="px-3 py-2 text-right font-medium text-gray-800">{fmt(montant)} DT</td>
-                      <td className="px-3 py-2 text-gray-500 max-w-40 truncate">{a.commentaire || "—"}</td>
-                      <td className="px-3 py-2 whitespace-nowrap text-right">
-                        <button type="button" onClick={() => { setShowRecettesDetail(false); handleOpenEditModal(a) }} className="text-indigo-600 hover:underline mr-3">Modifier</button>
-                        <button type="button" onClick={() => handleDelete(a)} disabled={deletingId === a.id} className="text-red-500 hover:underline disabled:opacity-50">
-                          {deletingId === a.id ? "..." : "Supprimer"}
+          <>
+            {/* Vue cartes — mobile uniquement */}
+            <div className="md:hidden space-y-2 mb-2">
+              {recettesPageData.map((a) => {
+                const montant = (parseInt(a.nb_oliviers, 10) || 0) * (parseFloat(a.prix_par_olivier) || 0)
+                return (
+                  <div key={a.id} className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
+                    <div className="flex items-start justify-between mb-1">
+                      <p className="text-sm font-semibold text-gray-900">{a.date_activite}</p>
+                      <div className="text-right">
+                        <p className="text-xl font-bold text-gray-900">{fmt(montant)} DT</p>
+                        <p className="text-xs text-gray-500">{Number(a.nb_oliviers).toLocaleString("fr-FR")} oliviers × {fmt(parseFloat(a.prix_par_olivier) || 0)} DT</p>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-2">
+                      <span className="text-xs text-gray-500">{campagneMap[a.campagne_id] ?? "-"}</span>
+                    </div>
+                    {a.commentaire && <p className="text-xs text-gray-400 mb-2 truncate">{a.commentaire}</p>}
+                    <div className="flex items-center gap-3 pt-2 border-t border-gray-100">
+                      <button type="button" onClick={() => { setShowRecettesDetail(false); handleOpenEditModal(a) }} className="text-xs font-medium text-indigo-600 hover:text-indigo-800">Modifier</button>
+                      <button type="button" onClick={() => handleDelete(a)} disabled={deletingId === a.id} className="text-xs font-medium text-red-600 hover:text-red-800 ml-auto disabled:opacity-50">
+                        {deletingId === a.id ? "..." : "Supprimer"}
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Vue tableau — desktop uniquement */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="bg-gray-50 text-gray-500 uppercase tracking-wide">
+                    <th className="px-3 py-2 text-left font-medium">Date</th>
+                    <th className="px-3 py-2 text-left font-medium">Campagne</th>
+                    <th className="px-3 py-2 text-right font-medium">Oliviers</th>
+                    <th className="px-3 py-2 text-right font-medium">Prix/olivier</th>
+                    <th className="px-3 py-2 text-right font-medium">Montant</th>
+                    <th className="px-3 py-2 text-left font-medium">Commentaire</th>
+                    <th className="px-3 py-2"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {recettesPageData.map((a) => {
+                    const montant = (parseInt(a.nb_oliviers, 10) || 0) * (parseFloat(a.prix_par_olivier) || 0)
+                    return (
+                      <tr key={a.id} className="hover:bg-gray-50">
+                        <td className="px-3 py-2 text-gray-800 whitespace-nowrap">{a.date_activite}</td>
+                        <td className="px-3 py-2 text-gray-600">{campagneMap[a.campagne_id] ?? "-"}</td>
+                        <td className="px-3 py-2 text-right text-gray-800">{Number(a.nb_oliviers).toLocaleString("fr-FR")}</td>
+                        <td className="px-3 py-2 text-right text-gray-600">{fmt(parseFloat(a.prix_par_olivier) || 0)} DT</td>
+                        <td className="px-3 py-2 text-right font-medium text-gray-800">{fmt(montant)} DT</td>
+                        <td className="px-3 py-2 text-gray-500 max-w-40 truncate">{a.commentaire || "—"}</td>
+                        <td className="px-3 py-2 whitespace-nowrap text-right">
+                          <button type="button" onClick={() => { setShowRecettesDetail(false); handleOpenEditModal(a) }} className="text-indigo-600 hover:underline mr-3">Modifier</button>
+                          <button type="button" onClick={() => handleDelete(a)} disabled={deletingId === a.id} className="text-red-500 hover:underline disabled:opacity-50">
+                            {deletingId === a.id ? "..." : "Supprimer"}
+                          </button>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+                <tfoot>
+                  <tr className="bg-gray-50 font-semibold">
+                    <td colSpan={4} className="px-3 py-2 text-xs text-gray-700">Total toutes pages</td>
+                    <td className="px-3 py-2 text-right text-xs text-gray-900">{fmt(recettesLocation)} DT</td>
+                    <td colSpan={2} />
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+
+            {/* Pagination */}
+            {(() => {
+              const totalPages = Math.ceil(recettesTotalCount / RECETTES_PAGE_SIZE)
+              if (totalPages <= 1) return null
+              return (
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mt-3 px-1">
+                  <p className="text-sm text-gray-500">
+                    {recettesPage * RECETTES_PAGE_SIZE + 1}–{Math.min((recettesPage + 1) * RECETTES_PAGE_SIZE, recettesTotalCount)} sur {recettesTotalCount} recettes
+                  </p>
+                  <div className="flex items-center gap-1">
+                    <button type="button" onClick={() => setRecettesPage((p) => p - 1)} disabled={recettesPage === 0}
+                      className="rounded-md border border-gray-300 bg-white px-2.5 py-1 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40">←</button>
+                    {getPageNums(recettesPage, totalPages).map((p, i) =>
+                      p === "…" ? (
+                        <span key={`e-${i}`} className="px-1 text-sm text-gray-400">…</span>
+                      ) : (
+                        <button key={p} type="button" onClick={() => setRecettesPage(p - 1)}
+                          className={`rounded-md border px-2.5 py-1 text-sm font-medium ${p === recettesPage + 1 ? "border-olive-600 bg-olive-600 text-white" : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"}`}>
+                          {p}
                         </button>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-              <tfoot>
-                <tr className="bg-gray-50 font-semibold">
-                  <td colSpan={4} className="px-3 py-2 text-xs text-gray-700">Total</td>
-                  <td className="px-3 py-2 text-right text-xs text-gray-900">{fmt(recettesLocation)} DT</td>
-                  <td colSpan={2} />
-                </tr>
-              </tfoot>
-            </table>
-          </div>
+                      )
+                    )}
+                    <button type="button" onClick={() => setRecettesPage((p) => p + 1)} disabled={recettesPage >= totalPages - 1}
+                      className="rounded-md border border-gray-300 bg-white px-2.5 py-1 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40">→</button>
+                  </div>
+                </div>
+              )
+            })()}
+          </>
         )}
       </Modal>
 
@@ -721,30 +828,25 @@ function DashboardTracteur({ equipement, onRetourProfil }) {
                 </table>
               </div>
               {totalPages > 1 && (
-                <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
-                  <p className="text-xs text-gray-500">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mt-3 px-1">
+                  <p className="text-sm text-gray-500">
                     {activitePage * ACTIVITES_PAGE_SIZE + 1}–{Math.min((activitePage + 1) * ACTIVITES_PAGE_SIZE, activites.length)} sur {activites.length} activités
                   </p>
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setActivitePage((p) => p - 1)}
-                      disabled={activitePage === 0}
-                      className="px-2 py-1 text-xs rounded border border-gray-300 text-gray-600 disabled:opacity-40 hover:bg-gray-50"
-                    >
-                      ← Précédent
-                    </button>
-                    <span className="px-2 py-1 text-xs text-gray-500">
-                      {activitePage + 1} / {totalPages}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setActivitePage((p) => p + 1)}
-                      disabled={activitePage >= totalPages - 1}
-                      className="px-2 py-1 text-xs rounded border border-gray-300 text-gray-600 disabled:opacity-40 hover:bg-gray-50"
-                    >
-                      Suivant →
-                    </button>
+                  <div className="flex items-center gap-1">
+                    <button type="button" onClick={() => setActivitePage((p) => p - 1)} disabled={activitePage === 0}
+                      className="rounded-md border border-gray-300 bg-white px-2.5 py-1 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40">←</button>
+                    {getPageNums(activitePage, totalPages).map((p, i) =>
+                      p === "…" ? (
+                        <span key={`e-${i}`} className="px-1 text-sm text-gray-400">…</span>
+                      ) : (
+                        <button key={p} type="button" onClick={() => setActivitePage(p - 1)}
+                          className={`rounded-md border px-2.5 py-1 text-sm font-medium ${p === activitePage + 1 ? "border-olive-600 bg-olive-600 text-white" : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"}`}>
+                          {p}
+                        </button>
+                      )
+                    )}
+                    <button type="button" onClick={() => setActivitePage((p) => p + 1)} disabled={activitePage >= totalPages - 1}
+                      className="rounded-md border border-gray-300 bg-white px-2.5 py-1 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40">→</button>
                   </div>
                 </div>
               )}
