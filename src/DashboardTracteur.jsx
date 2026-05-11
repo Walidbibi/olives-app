@@ -59,6 +59,16 @@ function DashboardTracteur({ equipement, onRetourProfil }) {
   // Compteur pour déclencher le rechargement après toute mutation
   const [refreshKey, setRefreshKey] = useState(0)
 
+  // Équipement complet (recharge prix_achat si manquant dans le prop)
+  const [equipementFull, setEquipementFull] = useState(equipement)
+  useEffect(() => {
+    setEquipementFull(equipement)
+    if (equipement?.id && equipement.prix_achat === undefined) {
+      supabase.from("equipements").select("*").eq("id", equipement.id).single()
+        .then(({ data }) => { if (data) setEquipementFull(data) })
+    }
+  }, [equipement])
+
   // Activités tracteur
   const [activites, setActivites] = useState([])
   const [loadingActivites, setLoadingActivites] = useState(false)
@@ -620,7 +630,44 @@ function DashboardTracteur({ equipement, onRetourProfil }) {
           const pageActivites = activites.slice(activitePage * ACTIVITES_PAGE_SIZE, (activitePage + 1) * ACTIVITES_PAGE_SIZE)
           return (
             <>
-              <div className="overflow-x-auto">
+              {/* Vue cartes — mobile uniquement */}
+              <div className="md:hidden space-y-2 mb-2">
+                {pageActivites.map((a) => {
+                  const montant = (parseInt(a.nb_oliviers, 10) || 0) * (parseFloat(a.prix_par_olivier) || 0)
+                  return (
+                    <div key={a.id} className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
+                      <div className="flex items-start justify-between mb-1">
+                        <p className="text-sm font-semibold text-gray-900">{a.date_activite}</p>
+                        <div className="text-right">
+                          <p className="text-xl font-bold text-gray-900">{Number(a.nb_oliviers).toLocaleString("fr-FR")} oliviers</p>
+                          <p className="text-xs text-gray-500">{fmt(parseFloat(a.prix_par_olivier) || 0)} DT/olivier</p>
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-2">
+                        {a.type_activite === "sous_traitance" ? (
+                          <span className="inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-medium text-indigo-700">Sous-traitance</span>
+                        ) : (
+                          <span className="inline-flex items-center rounded-full bg-olive-50 px-2 py-0.5 text-[10px] font-medium text-olive-700">Mes parcelles</span>
+                        )}
+                        <span className="text-xs text-gray-500">{campagneMap[a.campagne_id] ?? "-"}</span>
+                        <span className="ml-auto text-sm font-semibold text-gray-900">{fmt(montant)} DT</span>
+                      </div>
+                      {a.commentaire && (
+                        <p className="text-xs text-gray-400 mb-2 truncate">{a.commentaire}</p>
+                      )}
+                      <div className="flex items-center gap-3 pt-2 border-t border-gray-100">
+                        <button type="button" onClick={() => { setShowActivitesDetail(false); handleOpenEditModal(a) }} className="text-xs font-medium text-indigo-600 hover:text-indigo-800">Modifier</button>
+                        <button type="button" onClick={() => handleDelete(a)} disabled={deletingId === a.id} className="text-xs font-medium text-red-600 hover:text-red-800 ml-auto disabled:opacity-50">
+                          {deletingId === a.id ? "..." : "Supprimer"}
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* Vue tableau — desktop uniquement */}
+              <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-xs">
                   <thead>
                     <tr className="bg-gray-50 text-gray-500 uppercase tracking-wide">
@@ -741,13 +788,13 @@ function DashboardTracteur({ equipement, onRetourProfil }) {
       </section>
 
       {/* Amortissement — toutes campagnes uniquement */}
-      {!campagneId && equipement?.prix_achat > 0 && impactTracteur !== null && (
+      {!campagneId && equipementFull?.prix_achat > 0 && impactTracteur !== null && (
         <section className="mb-4">
           <div className="bg-white border border-gray-200 rounded-lg px-4 py-4 shadow-sm">
             <h2 className="text-sm font-semibold text-gray-900 mb-1">Amortissement du tracteur</h2>
             <p className="text-xs text-gray-400 mb-4">Toutes campagnes confondues — gain net cumulé vs prix d'achat</p>
             {(() => {
-              const prixAchat = equipement.prix_achat
+              const prixAchat = equipementFull.prix_achat
               // récupéré = gains nets opérationnels (le prix d'achat étant déjà dans les charges)
               const recupere = impactTracteur + prixAchat
               const pct = Math.min(100, Math.max(0, (recupere / prixAchat) * 100))
