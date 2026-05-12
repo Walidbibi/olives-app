@@ -933,7 +933,7 @@ function FormulaireVente({ recoltePourVente, clearRecoltePourVente }) {
                         {type != null ? renderTypeBadge(type) : "-"}
                       </td>
                       <td className="px-3 py-2 text-right text-gray-800">
-                        {v.quantite_kg?.toLocaleString("fr-FR")} kg
+                        {v.quantite_kg?.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg
                       </td>
                       <td className="px-3 py-2 text-right text-gray-800">
                         {v.prix_kg_dt?.toLocaleString("fr-FR", {
@@ -1042,7 +1042,7 @@ function FormulaireVente({ recoltePourVente, clearRecoltePourVente }) {
               <p>
                 Quantité :{" "}
                 <span className="font-semibold">
-                  {venteASupprimer.quantite_kg?.toLocaleString("fr-FR")} kg
+                  {venteASupprimer.quantite_kg?.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg
                 </span>
                 {venteASupprimer.acheteur && (
                   <>

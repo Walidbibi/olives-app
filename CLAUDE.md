@@ -205,7 +205,7 @@ Données de récolte au survol déjà implémentées (tooltip live depuis Supaba
 - [ ] **`FormulaireRecolte.jsx` — `est_vendu` orphelin** : Si une vente est supprimée, `est_vendu` reste `true` dans la table récolte — la récolte est bloquée pour toujours.
 - [ ] **`CarteExploitation.jsx` — `fitBounds()` sans vérification** : Appelé avec un tableau vide si aucune parcelle n'a de GPS → erreur Leaflet silencieuse.
 - [x] **`DashboardTracteur.jsx` — `equipement` potentiellement null** : Accès à `equipement.prix_achat` sans vérification que `equipement` existe au premier rendu.
-- [ ] **`FormulaireVente.jsx` — Incohérence décimales dans le même tableau** : Ligne avec `toLocaleString` sans décimales vs ligne avec 3 décimales dans la même colonne.
+- [x] **`FormulaireVente.jsx` — Incohérence décimales dans le même tableau** : Ligne avec `toLocaleString` sans décimales vs ligne avec 3 décimales dans la même colonne.
 - [ ] **`FormulaireRecolte.jsx` — Tri par `parcelle_id` (nombre) au lieu du nom** : Quand l'utilisateur trie par parcelle, le tri s'applique sur l'ID numérique, pas le nom — ordre aléatoire.
 - [ ] **`FormulaireCampagne.jsx` — Suppression en cascade silencieuse** : Si une contrainte FK bloque la suppression d'une campagne, l'erreur n'est pas expliquée à l'utilisateur.
 - [ ] **`ProfilExploitation.jsx` — Parsing GPS fragile** : Le champ coordonnées GPS ne normalise pas la virgule/point décimal — une saisie "34,51" vs "34.51" peut échouer silencieusement.
