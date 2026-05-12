@@ -51,6 +51,10 @@ export function DataProvider({ children }) {
         throw firstError
       }
 
+      if (!ventes || !recoltes || !charges || !campagnes || !parcelles) {
+        throw new Error("Données reçues nulles depuis Supabase")
+      }
+
       setData({
         ventes,
         recoltes,
