@@ -258,75 +258,71 @@ function FormulaireCampagne() {
             Aucune campagne enregistrée pour le moment.
           </p>
         ) : (
-          <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
-            <table className="min-w-full divide-y divide-gray-200 text-sm">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-3 py-2 text-left font-medium text-gray-600">
-                    Année
-                  </th>
-                  <th className="px-3 py-2 text-left font-medium text-gray-600">
-                    Date début
-                  </th>
-                  <th className="px-3 py-2 text-left font-medium text-gray-600">
-                    Date fin
-                  </th>
-                  <th className="px-3 py-2 text-left font-medium text-gray-600">
-                    Statut
-                  </th>
-                  <th className="px-3 py-2 text-left font-medium text-gray-600">
-                    Notes
-                  </th>
-                  <th className="px-3 py-2 text-right font-medium text-gray-600">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 bg-white">
-                {campagnes.map((c) => (
-                  <tr key={c.id}>
-                    <td className="px-3 py-2 text-gray-800">{c.annee}</td>
-                    <td className="px-3 py-2 text-gray-800">
-                      {c.date_debut || "-"}
-                    </td>
-                    <td className="px-3 py-2 text-gray-800">
-                      {c.date_fin || "-"}
-                    </td>
-                    <td className="px-3 py-2 text-gray-800">
+          <>
+            {/* Vue cartes — mobile uniquement */}
+            <div className="md:hidden space-y-2">
+              {campagnes.map((c) => (
+                <div key={c.id} className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <p className="text-lg font-bold text-gray-900">{c.annee}</p>
                       {c.statut === "en_cours" ? (
-                        <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-800 border border-green-200">
-                          En cours
-                        </span>
+                        <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-800 border border-green-200">En cours</span>
                       ) : (
-                        <span className="inline-flex items-center rounded-full bg-gray-50 px-2 py-0.5 text-xs font-medium text-gray-700 border border-gray-200">
-                          Terminée
-                        </span>
+                        <span className="inline-flex items-center rounded-full bg-gray-50 px-2 py-0.5 text-xs font-medium text-gray-700 border border-gray-200">Terminée</span>
                       )}
-                    </td>
-                    <td className="px-3 py-2 text-gray-800 max-w-xs truncate">
-                      {c.notes || "-"}
-                    </td>
-                    <td className="px-3 py-2 text-right space-x-2">
-                      <button
-                        type="button"
-                        onClick={() => ouvrirModalEdition(c)}
-                        className="text-xs font-medium text-olive-700 hover:text-olive-900"
-                      >
-                        Modifier
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => demanderSuppression(c)}
-                        className="text-xs font-medium text-red-600 hover:text-red-800"
-                      >
-                        Supprimer
-                      </button>
-                    </td>
+                    </div>
+                    <div className="flex gap-3">
+                      <button type="button" onClick={() => ouvrirModalEdition(c)} className="text-xs font-medium text-olive-700 hover:text-olive-900">Modifier</button>
+                      <button type="button" onClick={() => demanderSuppression(c)} className="text-xs font-medium text-red-600 hover:text-red-800">Supprimer</button>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600">
+                    {c.date_debut && <span><span className="text-gray-400">Début&nbsp;:</span> {c.date_debut}</span>}
+                    {c.date_fin && <span><span className="text-gray-400">Fin&nbsp;:</span> {c.date_fin}</span>}
+                    {c.notes && <span className="text-gray-500 w-full">{c.notes}</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Vue tableau — desktop uniquement */}
+            <div className="hidden md:block overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
+              <table className="min-w-full divide-y divide-gray-200 text-sm">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-3 py-2 text-left font-medium text-gray-600">Année</th>
+                    <th className="px-3 py-2 text-left font-medium text-gray-600">Date début</th>
+                    <th className="px-3 py-2 text-left font-medium text-gray-600">Date fin</th>
+                    <th className="px-3 py-2 text-left font-medium text-gray-600">Statut</th>
+                    <th className="px-3 py-2 text-left font-medium text-gray-600">Notes</th>
+                    <th className="px-3 py-2 text-right font-medium text-gray-600">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-gray-100 bg-white">
+                  {campagnes.map((c) => (
+                    <tr key={c.id}>
+                      <td className="px-3 py-2 text-gray-800">{c.annee}</td>
+                      <td className="px-3 py-2 text-gray-800">{c.date_debut || "-"}</td>
+                      <td className="px-3 py-2 text-gray-800">{c.date_fin || "-"}</td>
+                      <td className="px-3 py-2 text-gray-800">
+                        {c.statut === "en_cours" ? (
+                          <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-800 border border-green-200">En cours</span>
+                        ) : (
+                          <span className="inline-flex items-center rounded-full bg-gray-50 px-2 py-0.5 text-xs font-medium text-gray-700 border border-gray-200">Terminée</span>
+                        )}
+                      </td>
+                      <td className="px-3 py-2 text-gray-800 max-w-xs truncate">{c.notes || "-"}</td>
+                      <td className="px-3 py-2 text-right space-x-2">
+                        <button type="button" onClick={() => ouvrirModalEdition(c)} className="text-xs font-medium text-olive-700 hover:text-olive-900">Modifier</button>
+                        <button type="button" onClick={() => demanderSuppression(c)} className="text-xs font-medium text-red-600 hover:text-red-800">Supprimer</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
 
