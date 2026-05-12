@@ -201,25 +201,25 @@ Données de récolte au survol déjà implémentées (tooltip live depuis Supaba
 - [x] **`ProfilExploitation.jsx` — Accès `campagnes[0]` sans vérification** : Si la liste des campagnes est vide, `campagnes[0].id` plante à l'ouverture d'une modale de suppression.
 
 ### MOYENS
-- [ ] **`FormulaireVente.jsx` — `recolte` peut être null** : Si la récolte liée n'existe plus en base, le code continue sans afficher d'erreur claire à l'utilisateur.
-- [ ] **`FormulaireRecolte.jsx` — `est_vendu` orphelin** : Si une vente est supprimée, `est_vendu` reste `true` dans la table récolte — la récolte est bloquée pour toujours.
-- [ ] **`CarteExploitation.jsx` — `fitBounds()` sans vérification** : Appelé avec un tableau vide si aucune parcelle n'a de GPS → erreur Leaflet silencieuse.
-- [x] **`DashboardTracteur.jsx` — `equipement` potentiellement null** : Accès à `equipement.prix_achat` sans vérification que `equipement` existe au premier rendu.
-- [x] **`FormulaireVente.jsx` — Incohérence décimales dans le même tableau** : Ligne avec `toLocaleString` sans décimales vs ligne avec 3 décimales dans la même colonne.
-- [ ] **`FormulaireRecolte.jsx` — Tri par `parcelle_id` (nombre) au lieu du nom** : Quand l'utilisateur trie par parcelle, le tri s'applique sur l'ID numérique, pas le nom — ordre aléatoire.
-- [ ] **`FormulaireCampagne.jsx` — Suppression en cascade silencieuse** : Si une contrainte FK bloque la suppression d'une campagne, l'erreur n'est pas expliquée à l'utilisateur.
-- [ ] **`ProfilExploitation.jsx` — Parsing GPS fragile** : Le champ coordonnées GPS ne normalise pas la virgule/point décimal — une saisie "34,51" vs "34.51" peut échouer silencieusement.
-- [ ] **`Resume.jsx` — Filtre tracteur incorrect** : `.ilike("type", "%tracteur%")` filtre les équipements mais le titre de la section dit "Équipements" — périmètre incohérent.
-- [ ] **`FormulaireRecolte.jsx` — Mutation d'état après unmount** : `setIsSubmitting(false)` appelé dans `finally` alors que la modale est déjà fermée → memory leak potentiel.
-- [ ] **`FormulaireVente.jsx` — Double round-trip Supabase inutile** : Filtre parcelle/type résolu côté client alors qu'il pourrait être fait directement dans la query SQL.
-- [ ] **`SearchableSelect.jsx` — Prop `disabled` ignorée** : Passée depuis `ProfilExploitation` mais non implémentée dans le composant — le select reste toujours actif.
+- [x] **`FormulaireVente.jsx` — `recolte` peut être null** : Faux positif — déjà protégé (guard ligne 451 + fallback Supabase).
+- [x] **`FormulaireRecolte.jsx` — `est_vendu` orphelin** : Faux positif — la suppression d'une vente remet `est_vendu = false` (ligne 595).
+- [x] **`CarteExploitation.jsx` — `fitBounds()` sans vérification** : Faux positif — guard `length === 0` déjà en place (ligne 110).
+- [x] **`DashboardTracteur.jsx` — `equipement` potentiellement null** : Corrigé — guard ajouté avant le return JSX.
+- [x] **`FormulaireVente.jsx` — Incohérence décimales dans le même tableau** : Corrigé — `quantite_kg` uniformisé à 2 décimales partout.
+- [ ] **`FormulaireRecolte.jsx` — Tri par `parcelle_id` (nombre) au lieu du nom** : Réel — à corriger (tri par ID numérique au lieu du nom de parcelle).
+- [x] **`FormulaireCampagne.jsx` — Suppression en cascade silencieuse** : Faux positif — chaque étape a son message d'erreur explicite.
+- [x] **`ProfilExploitation.jsx` — Parsing GPS fragile** : Faux positif — `parseGPS` normalise virgule/point décimal.
+- [x] **`Resume.jsx` — Filtre tracteur incorrect** : Faux positif — label et filtre cohérents ("Tracteurs").
+- [x] **`FormulaireRecolte.jsx` — Mutation d'état après unmount** : Faux positif — React 18/19 ignore silencieusement les updates sur composants démontés.
+- [ ] **`FormulaireVente.jsx` — Double round-trip Supabase inutile** : Réel (perf uniquement, pas de crash) — à optimiser plus tard.
+- [x] **`SearchableSelect.jsx` — Prop `disabled` ignorée** : Faux positif — `disabled` bien câblé (ligne 49).
 
 ### MINEURS
-- [ ] **`FormulaireCharges.jsx`** — `formatMontant()` sans guard sur `isNaN`.
-- [ ] **`Modal.jsx`** — Prop `size` acceptée mais partiellement ignorée selon les cas.
-- [ ] **`FormulaireRecolte.jsx`** — Pas de message "Aucun résultat" dédié après changement de campagne.
-- [ ] **`CarteExploitation.jsx`** — Aucun état de chargement visible pendant le fetch des données.
-- [ ] **`Resume.jsx`** — Spinner de chargement existant mais non affiché dans l'UI.
+- [ ] **`FormulaireCharges.jsx`** — `formatMontant()` sans guard sur `isNaN` : Réel mais très mineur — afficherait "NaN DT" si valeur non numérique (quasi impossible en pratique).
+- [x] **`Modal.jsx`** — Prop `size` partiellement ignorée : Faux positif — default/large/xlarge tous gérés.
+- [x] **`FormulaireRecolte.jsx`** — Pas de message "Aucun résultat" après changement de campagne : Faux positif — message existe ligne 890.
+- [x] **`CarteExploitation.jsx`** — Aucun état de chargement visible : Faux positif — loading global DataProvider couvre ça.
+- [x] **`Resume.jsx`** — Spinner non affiché : Faux positif — `if (loading) return <Spinner />` bien en place.
 
 ## Suivi GPS tracteur — Décisions prises (session 2026-05-12)
 
