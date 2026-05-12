@@ -193,3 +193,31 @@ Données de récolte au survol déjà implémentées (tooltip live depuis Supaba
 ### Vision long terme
 - [ ] **Multi-parcelles** : Ajouter les autres parcelles de l'exploitation avec leurs polygones GPS.
 - [ ] **Partage de carte** : Montrer la carte à un acheteur ou un expert agricole.
+
+## Suivi GPS tracteur — Décisions prises (session 2026-05-12)
+
+### Matériel retenu
+- **Tracker : Trackerking J16 4G** (AliExpress, ~13€/pièce, lot de 3 à ~38€)
+  - Protocole GT06 confirmé dans le titre produit
+  - 4G+2G, batterie de secours 300mAh
+  - Câblé sur 12V tracteur
+- **SIM** : Ooredoo ou Orange Tunisie, forfait data basique (~5 DT/mois)
+
+### Architecture technique retenue
+```
+Tracker GPS → (SIM 4G) → Traccar (serveur Oracle Cloud) → CarteExploitation.jsx (Leaflet)
+```
+- **Traccar** : logiciel open source gratuit, reçoit les positions via protocole GT06 TCP
+- **Serveur** : Oracle Cloud Always Free (gratuit à vie, 4 vCPU / 24 Go RAM total, largement suffisant)
+- **Intégration app** : fetch sur `GET /api/positions` Traccar toutes les 15s → marqueur 🚜 dans CarteExploitation.jsx
+- Pas de modification Supabase requise (Traccar gère sa propre base)
+
+### Étapes d'implémentation (à faire quand le tracker est reçu)
+1. Créer un compte Oracle Cloud + déployer Traccar sur VM gratuite
+2. Configurer le tracker par SMS pour pointer vers le serveur Traccar
+3. Ajouter un marqueur tracteur dynamique dans `CarteExploitation.jsx`
+
+### Budget
+- Matériel : ~13€ (achat unique)
+- Serveur : 0€ (Oracle Cloud free tier)
+- SIM data : ~5 DT/mois
