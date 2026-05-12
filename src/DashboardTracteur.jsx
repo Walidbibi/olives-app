@@ -403,6 +403,14 @@ function DashboardTracteur({ equipement, onRetourProfil }) {
     return pages
   }
 
+  if (!equipement) {
+    return (
+      <div className="p-8 text-center text-gray-500 text-sm">
+        Aucun équipement sélectionné.
+      </div>
+    )
+  }
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       {onRetourProfil && (
