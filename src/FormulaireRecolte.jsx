@@ -680,7 +680,10 @@ function FormulaireRecolte({ onDemanderVente }) {
               Campagne active
             </label>
             {loadingCampagnes ? (
-              <div className="text-sm text-gray-500">Chargement des campagnes...</div>
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <div className="w-4 h-4 border-2 border-gray-200 border-t-blue-500 rounded-full animate-spin" />
+                Chargement des campagnes...
+              </div>
             ) : campagnes.length === 0 ? (
               <div className="text-sm text-red-500">
                 Aucune campagne en cours.

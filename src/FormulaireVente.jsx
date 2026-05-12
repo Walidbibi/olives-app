@@ -696,7 +696,10 @@ function FormulaireVente({ recoltePourVente, clearRecoltePourVente }) {
               Campagne active
             </label>
             {loadingCampagnes ? (
-              <div className="text-sm text-gray-500">Chargement des campagnes...</div>
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <div className="w-4 h-4 border-2 border-gray-200 border-t-blue-500 rounded-full animate-spin" />
+                Chargement des campagnes...
+              </div>
             ) : campagnes.length === 0 ? (
               <div className="text-sm text-red-500">
                 Aucune campagne en cours.
@@ -1180,9 +1183,10 @@ function FormulaireVente({ recoltePourVente, clearRecoltePourVente }) {
                 Récolte vendue (vente brute)
               </label>
               {loadingRecoltes ? (
-                <p className="mt-1 text-sm text-gray-500">
+                <div className="mt-1 flex items-center gap-2 text-sm text-gray-500">
+                  <div className="w-4 h-4 border-2 border-gray-200 border-t-blue-500 rounded-full animate-spin" />
                   Chargement des récoltes vendables...
-                </p>
+                </div>
               ) : recoltesVendables.length === 0 && !editingId ? (
                 <p className="mt-1 text-sm text-red-500">
                   Aucune récolte disponible pour la vente brute (soit déjà
