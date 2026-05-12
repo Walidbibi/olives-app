@@ -193,3 +193,58 @@ Données de récolte au survol déjà implémentées (tooltip live depuis Supaba
 ### Vision long terme
 - [ ] **Multi-parcelles** : Ajouter les autres parcelles de l'exploitation avec leurs polygones GPS.
 - [ ] **Partage de carte** : Montrer la carte à un acheteur ou un expert agricole.
+
+## Bugs identifiés — Audit session 2026-05-12
+
+### CRITIQUES
+- [ ] **`DataProvider.jsx` — Données Supabase non vérifiées** : Si Supabase retourne `null` (réseau coupé, table vide), le destructuring plante toute l'app silencieusement. Le `= []` dans le destructuring ne protège que contre `undefined`, pas contre `null` — Supabase retourne toujours `null` en erreur. Le `firstError` check rattrape les cas normaux, mais si Supabase renvoie `{ data: null, error: null }` (RLS silencieux, timeout mal propagé), `setData` stocke `null` et tout composant faisant `.map()` plante en écran blanc. **Fix : après le check `firstError`, ajouter `if (!ventes || !recoltes || !charges || !campagnes || !parcelles) throw new Error("Données reçues nulles depuis Supabase")`.**
+- [ ] **`ProfilExploitation.jsx` — Accès `campagnes[0]` sans vérification** : Si la liste des campagnes est vide, `campagnes[0].id` plante à l'ouverture d'une modale de suppression.
+
+### MOYENS
+- [ ] **`FormulaireVente.jsx` — `recolte` peut être null** : Si la récolte liée n'existe plus en base, le code continue sans afficher d'erreur claire à l'utilisateur.
+- [ ] **`FormulaireRecolte.jsx` — `est_vendu` orphelin** : Si une vente est supprimée, `est_vendu` reste `true` dans la table récolte — la récolte est bloquée pour toujours.
+- [ ] **`CarteExploitation.jsx` — `fitBounds()` sans vérification** : Appelé avec un tableau vide si aucune parcelle n'a de GPS → erreur Leaflet silencieuse.
+- [ ] **`DashboardTracteur.jsx` — `equipement` potentiellement null** : Accès à `equipement.prix_achat` sans vérification que `equipement` existe au premier rendu.
+- [ ] **`FormulaireVente.jsx` — Incohérence décimales dans le même tableau** : Ligne avec `toLocaleString` sans décimales vs ligne avec 3 décimales dans la même colonne.
+- [ ] **`FormulaireRecolte.jsx` — Tri par `parcelle_id` (nombre) au lieu du nom** : Quand l'utilisateur trie par parcelle, le tri s'applique sur l'ID numérique, pas le nom — ordre aléatoire.
+- [ ] **`FormulaireCampagne.jsx` — Suppression en cascade silencieuse** : Si une contrainte FK bloque la suppression d'une campagne, l'erreur n'est pas expliquée à l'utilisateur.
+- [ ] **`ProfilExploitation.jsx` — Parsing GPS fragile** : Le champ coordonnées GPS ne normalise pas la virgule/point décimal — une saisie "34,51" vs "34.51" peut échouer silencieusement.
+- [ ] **`Resume.jsx` — Filtre tracteur incorrect** : `.ilike("type", "%tracteur%")` filtre les équipements mais le titre de la section dit "Équipements" — périmètre incohérent.
+- [ ] **`FormulaireRecolte.jsx` — Mutation d'état après unmount** : `setIsSubmitting(false)` appelé dans `finally` alors que la modale est déjà fermée → memory leak potentiel.
+- [ ] **`FormulaireVente.jsx` — Double round-trip Supabase inutile** : Filtre parcelle/type résolu côté client alors qu'il pourrait être fait directement dans la query SQL.
+- [ ] **`SearchableSelect.jsx` — Prop `disabled` ignorée** : Passée depuis `ProfilExploitation` mais non implémentée dans le composant — le select reste toujours actif.
+
+### MINEURS
+- [ ] **`FormulaireCharges.jsx`** — `formatMontant()` sans guard sur `isNaN`.
+- [ ] **`Modal.jsx`** — Prop `size` acceptée mais partiellement ignorée selon les cas.
+- [ ] **`FormulaireRecolte.jsx`** — Pas de message "Aucun résultat" dédié après changement de campagne.
+- [ ] **`CarteExploitation.jsx`** — Aucun état de chargement visible pendant le fetch des données.
+- [ ] **`Resume.jsx`** — Spinner de chargement existant mais non affiché dans l'UI.
+
+## Suivi GPS tracteur — Décisions prises (session 2026-05-12)
+
+### Matériel retenu
+- **Tracker : Trackerking J16 4G** (AliExpress, ~13€/pièce, lot de 3 à ~38€)
+  - Protocole GT06 confirmé dans le titre produit
+  - 4G+2G, batterie de secours 300mAh
+  - Câblé sur 12V tracteur
+- **SIM** : Ooredoo ou Orange Tunisie, forfait data basique (~5 DT/mois)
+
+### Architecture technique retenue
+```
+Tracker GPS → (SIM 4G) → Traccar (serveur Oracle Cloud) → CarteExploitation.jsx (Leaflet)
+```
+- **Traccar** : logiciel open source gratuit, reçoit les positions via protocole GT06 TCP
+- **Serveur** : Oracle Cloud Always Free (gratuit à vie, 4 vCPU / 24 Go RAM total, largement suffisant)
+- **Intégration app** : fetch sur `GET /api/positions` Traccar toutes les 15s → marqueur 🚜 dans CarteExploitation.jsx
+- Pas de modification Supabase requise (Traccar gère sa propre base)
+
+### Étapes d'implémentation (à faire quand le tracker est reçu)
+1. Créer un compte Oracle Cloud + déployer Traccar sur VM gratuite
+2. Configurer le tracker par SMS pour pointer vers le serveur Traccar
+3. Ajouter un marqueur tracteur dynamique dans `CarteExploitation.jsx`
+
+### Budget
+- Matériel : ~13€ (achat unique)
+- Serveur : 0€ (Oracle Cloud free tier)
+- SIM data : ~5 DT/mois
