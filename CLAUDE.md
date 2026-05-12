@@ -197,7 +197,7 @@ Données de récolte au survol déjà implémentées (tooltip live depuis Supaba
 ## Bugs identifiés — Audit session 2026-05-12
 
 ### CRITIQUES
-- [ ] **`DataProvider.jsx` — Données Supabase non vérifiées** : Si Supabase retourne `null` (réseau coupé, table vide), le destructuring plante toute l'app silencieusement.
+- [ ] **`DataProvider.jsx` — Données Supabase non vérifiées** : Si Supabase retourne `null` (réseau coupé, table vide), le destructuring plante toute l'app silencieusement. Le `= []` dans le destructuring ne protège que contre `undefined`, pas contre `null` — Supabase retourne toujours `null` en erreur. Le `firstError` check rattrape les cas normaux, mais si Supabase renvoie `{ data: null, error: null }` (RLS silencieux, timeout mal propagé), `setData` stocke `null` et tout composant faisant `.map()` plante en écran blanc. **Fix : après le check `firstError`, ajouter `if (!ventes || !recoltes || !charges || !campagnes || !parcelles) throw new Error("Données reçues nulles depuis Supabase")`.**
 - [ ] **`ProfilExploitation.jsx` — Accès `campagnes[0]` sans vérification** : Si la liste des campagnes est vide, `campagnes[0].id` plante à l'ouverture d'une modale de suppression.
 
 ### MOYENS
