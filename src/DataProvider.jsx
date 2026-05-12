@@ -37,7 +37,7 @@ export function DataProvider({ children }) {
           .from("charge")
           .select("montant_dt, type_charge, campagne_id"),
         supabase.from("campagne").select("id, annee"),
-        supabase.from("parcelles").select("id, nom"),
+        supabase.from("parcelles").select("id, nom, latitude, longitude"),
       ])
 
       const firstError =
