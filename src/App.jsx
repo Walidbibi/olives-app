@@ -28,6 +28,7 @@ function App() {
   const [ongletPrecedent, setOngletPrecedent] = useState("resume")
   const [recoltePourVente, setRecoltePourVente] = useState(null)
   const [tracteurSelectionne, setTracteurSelectionne] = useState(null)
+  const [parcelleCarteFocus, setParcelleCarteFocus] = useState(null)
   const changerOnglet = (id) => {
     setOngletActif(id)
   }
@@ -162,17 +163,26 @@ function App() {
 
         {ongletActif === "charges" && <FormulaireCharges />}
 
-        {ongletActif === "carte" && <CarteExploitation />}
+        {ongletActif === "carte" && (
+          <CarteExploitation
+            focusParcelle={parcelleCarteFocus}
+            onFocusDone={() => setParcelleCarteFocus(null)}
+          />
+        )}
 
         {ongletActif === "profil" && (
-  <ProfilExploitation
-    onVoirDashboardTracteur={(equipement) => {
-      setTracteurSelectionne(equipement)
-      setOngletPrecedent("profil")
-      setOngletActif("dashboard_tracteur")
-    }}
-  />
-)}
+          <ProfilExploitation
+            onVoirDashboardTracteur={(equipement) => {
+              setTracteurSelectionne(equipement)
+              setOngletPrecedent("profil")
+              setOngletActif("dashboard_tracteur")
+            }}
+            onVoirSurCarte={(parcelle) => {
+              setParcelleCarteFocus(parcelle)
+              setOngletActif("carte")
+            }}
+          />
+        )}
 {ongletActif === "dashboard_tracteur" && (
   <DashboardTracteur
     equipement={tracteurSelectionne}
