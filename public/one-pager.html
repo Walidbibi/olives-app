@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Olive App — Gérez votre oliveraie. Sans paperasse.</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green:       #4a7c59;
+      --green-light: #e8f0eb;
+      --green-dark:  #2e5238;
+      --cream:       #faf8f3;
+      --cream-dark:  #f0ece0;
+      --text:        #1a1a1a;
+      --muted:       #666;
+    }
+
+    body {
+      font-family: -apple-system, "Segoe UI", Georgia, serif;
+      background: var(--cream);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    .page {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 48px 32px 64px;
+    }
+
+    /* ── HEADER ── */
+    header {
+      text-align: center;
+      padding-bottom: 40px;
+      border-bottom: 2px solid var(--cream-dark);
+      margin-bottom: 40px;
+    }
+
+    .logo {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--green-dark);
+      letter-spacing: -0.5px;
+      margin-bottom: 12px;
+    }
+
+    .tagline {
+      font-size: 1.55rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.3;
+      margin-bottom: 10px;
+    }
+
+    .sub-tagline {
+      font-size: 1rem;
+      color: var(--muted);
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    /* ── PROBLÈME ── */
+    .section-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--green);
+      margin-bottom: 16px;
+    }
+
+    .problems {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 44px;
+    }
+
+    .problem-card {
+      background: white;
+      border: 1px solid #e0ddd4;
+      border-left: 3px solid #c9b99a;
+      border-radius: 6px;
+      padding: 16px;
+      font-size: 0.9rem;
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    /* ── FONCTIONNALITÉS ── */
+    .features {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 44px;
+    }
+
+    .feature {
+      background: white;
+      border: 1px solid #e0ddd4;
+      border-radius: 8px;
+      padding: 20px;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+
+    .feature-icon {
+      font-size: 1.5rem;
+      line-height: 1;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .feature-title {
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--green-dark);
+      margin-bottom: 4px;
+    }
+
+    .feature-desc {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    /* ── BILAN ── */
+    .bilan {
+      background: var(--green);
+      color: white;
+      border-radius: 10px;
+      padding: 28px 32px;
+      text-align: center;
+      margin-bottom: 44px;
+    }
+
+    .bilan p {
+      font-size: 1.05rem;
+      line-height: 1.7;
+    }
+
+    .bilan strong {
+      font-size: 1.15rem;
+      display: block;
+      margin-top: 4px;
+    }
+
+    /* ── ACCÈS ── */
+    .pricing {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 44px;
+    }
+
+    .plan {
+      border: 1px solid #e0ddd4;
+      border-radius: 8px;
+      padding: 24px;
+      background: white;
+    }
+
+    .plan.premium {
+      border-color: var(--green);
+      background: var(--green-light);
+    }
+
+    .plan-name {
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--green-dark);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .plan-badge {
+      font-size: 0.65rem;
+      background: var(--green);
+      color: white;
+      padding: 2px 7px;
+      border-radius: 99px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .plan ul {
+      list-style: none;
+      font-size: 0.88rem;
+      color: var(--text);
+    }
+
+    .plan ul li {
+      padding: 4px 0;
+      padding-left: 18px;
+      position: relative;
+    }
+
+    .plan ul li::before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: var(--green);
+      font-weight: 700;
+    }
+
+    /* ── CTA ── */
+    .cta {
+      text-align: center;
+      background: var(--cream-dark);
+      border-radius: 10px;
+      padding: 32px;
+      margin-bottom: 40px;
+    }
+
+    .cta p {
+      font-size: 1rem;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+
+    .cta a {
+      display: inline-block;
+      background: var(--green);
+      color: white;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 1rem;
+      padding: 13px 32px;
+      border-radius: 6px;
+      letter-spacing: 0.3px;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      text-align: center;
+      font-size: 0.8rem;
+      color: #999;
+      border-top: 1px solid #e0ddd4;
+      padding-top: 24px;
+    }
+
+    footer span {
+      margin: 0 8px;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 560px) {
+      .page { padding: 32px 20px 48px; }
+      .problems { grid-template-columns: 1fr; }
+      .features { grid-template-columns: 1fr; }
+      .pricing  { grid-template-columns: 1fr; }
+      .tagline  { font-size: 1.3rem; }
+    }
+
+    /* ── PRINT ── */
+    @media print {
+      body { background: white; }
+      .page { padding: 24px 0; }
+      .cta  { display: none; }
+      .bilan { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .plan.premium { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <!-- HEADER -->
+    <header>
+      <div class="logo">🫒 Olive App</div>
+      <h1 class="tagline">Gérez votre oliveraie.<br>Sans paperasse.</h1>
+      <p class="sub-tagline">Suivez chaque kilo récolté, chaque dinar dépensé, chaque vente conclue — depuis votre téléphone.</p>
+    </header>
+
+    <!-- PROBLÈME -->
+    <p class="section-title">Ce que vous vivez aujourd'hui</p>
+    <div class="problems">
+      <div class="problem-card">"Je note la récolte dans un carnet… que je perds à la fin de la saison."</div>
+      <div class="problem-card">"Je ne sais pas si la saison a été rentable après les charges."</div>
+      <div class="problem-card">"Chaque année, je recommence à zéro sans historique."</div>
+    </div>
+
+    <!-- FONCTIONNALITÉS -->
+    <p class="section-title">Ce que fait Olive App</p>
+    <div class="features">
+      <div class="feature">
+        <div class="feature-icon">🌿</div>
+        <div>
+          <div class="feature-title">Récolte journalière</div>
+          <div class="feature-desc">Saisissez les kg par parcelle, par type d'olive et par destination. Historique complet par campagne.</div>
+        </div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">💰</div>
+        <div>
+          <div class="feature-title">Ventes</div>
+          <div class="feature-desc">Enregistrez acheteurs, prix au kg, montant total. Tout l'historique en un coup d'œil.</div>
+        </div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">📊</div>
+        <div>
+          <div class="feature-title">Charges</div>
+          <div class="feature-desc">Main d'œuvre, repas, essence, équipements. Votre bilan se calcule automatiquement.</div>
+        </div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🗺️</div>
+        <div>
+          <div class="feature-title">Carte interactive</div>
+          <div class="feature-desc">Vos parcelles sur la carte avec les données de récolte. Visualisez votre exploitation en un regard.</div>
+        </div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🚜</div>
+        <div>
+          <div class="feature-title">Tableau de bord tracteur</div>
+          <div class="feature-desc">Coûts d'entretien, carburant, heures de travail par équipement. Suivez votre matériel.</div>
+        </div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">📱</div>
+        <div>
+          <div class="feature-title">100 % mobile</div>
+          <div class="feature-desc">Saisissez directement depuis la parcelle, sans ordinateur. Conçu pour le terrain.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BILAN -->
+    <div class="bilan">
+      <p>À la fin de chaque campagne :</p>
+      <strong>Chiffre d'affaires · Charges totales · Marge nette<br>Calculés automatiquement.</strong>
+    </div>
+
+    <!-- ACCÈS -->
+    <p class="section-title">Accès</p>
+    <div class="pricing">
+      <div class="plan">
+        <div class="plan-name">Version gratuite</div>
+        <ul>
+          <li>Suivi des campagnes</li>
+          <li>Récolte journalière</li>
+          <li>Ventes</li>
+          <li>Charges</li>
+          <li>Bilan de saison</li>
+        </ul>
+      </div>
+      <div class="plan premium">
+        <div class="plan-name">Version complète <span class="plan-badge">Premium</span></div>
+        <ul>
+          <li>Tout de la version gratuite</li>
+          <li>Carte interactive des parcelles</li>
+          <li>Tableau de bord tracteur</li>
+          <li>Historique multi-campagnes avancé</li>
+          <li>Accès prioritaire aux nouvelles fonctionnalités</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="cta">
+      <p>Intéressé ? Demandez un accès — c'est gratuit pour démarrer.</p>
+      <a href="mailto:votre@email.tn">Demander un accès →</a>
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+      <span>Conçu pour les oliveraies tunisiennes</span>·
+      <span>Fonctionne sur mobile</span>·
+      <span>Vos données sécurisées</span>
+    </footer>
+
+  </div>
+</body>
+</html>
