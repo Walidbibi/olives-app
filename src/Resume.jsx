@@ -3,6 +3,10 @@ import { supabase } from "./supabase"
 import Spinner from "./Spinner"
 import Modal from "./Modal"
 import ExportExcel from "./ExportExcel"
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, Cell, Legend, PieChart, Pie,
+} from "recharts"
 
 function Resume({ onNavigateTracteur }) {
   const [kpi, setKpi] = useState({
@@ -50,6 +54,11 @@ function Resume({ onNavigateTracteur }) {
   const [detailMargeVue, setDetailMargeVue] = useState("annee")
   const [detailHuilePersoVue, setDetailHuilePersoVue] = useState("annee")
   const [detailChargesVue, setDetailChargesVue] = useState("campagne")
+  const [vueRentabilite, setVueRentabilite] = useState(false)
+  const [drilldown, setDrilldown] = useState(null)
+  const [rawVentes, setRawVentes] = useState([])
+  const [rawCharges, setRawCharges] = useState([])
+  const [rawAutresRevenus, setRawAutresRevenus] = useState([])
 
   useEffect(() => {
     async function loadCampagnes() {
@@ -311,16 +320,28 @@ function Resume({ onNavigateTracteur }) {
         })
       )
 
+      // kg récolté par campagne
+      const mapKgParCampagne = new Map()
+      for (const r of recoltes) {
+        const key = r.campagne_id || "null"
+        mapKgParCampagne.set(key, (mapKgParCampagne.get(key) || 0) + (parseFloat(r.quantite_kg) || 0))
+      }
+
       // Marge par campagne
       const margeParCampagne = Array.from(mapCaParCampagne.entries()).map(
         ([campagneId, caCamp]) => {
           const chargesAnnee = mapChargesParCampagne.get(campagneId) || 0
+          const kg = mapKgParCampagne.get(campagneId) || 0
+          const marge = caCamp - chargesAnnee
           return {
             campagneId: campagneId === "null" ? null : campagneId,
             annee: anneeCampagne(campagneId),
             ca: caCamp,
             charges: chargesAnnee,
-            marge: caCamp - chargesAnnee,
+            marge,
+            kg,
+            coutParKg: kg > 0 ? chargesAnnee / kg : null,
+            prixMoyenKg: kg > 0 ? caCamp / kg : null,
           }
         }
       )
@@ -469,6 +490,9 @@ function Resume({ onNavigateTracteur }) {
         huilePersoParParcelle,
         chargesParCampagne,
       })
+      setRawVentes(ventes)
+      setRawCharges(charges)
+      setRawAutresRevenus(autresRevenus)
       setLoading(false)
     }
     loadKpi()
@@ -548,6 +572,43 @@ function Resume({ onNavigateTracteur }) {
     [kpi.chargesParCampagne]
   )
 
+  const drilldownData = useMemo(() => {
+    if (!drilldown) return []
+    const { campagneId, type } = drilldown
+    const matchCampagne = (id) => String(id ?? "null") === String(campagneId ?? "null")
+
+    if (type === "ca") {
+      const ventesOlives = rawVentes
+        .filter((v) => matchCampagne(v.campagne_id))
+        .reduce((sum, v) => sum + (parseFloat(v.montant_total_dt) || 0), 0)
+      const autresMap = new Map()
+      rawAutresRevenus
+        .filter((r) => matchCampagne(r.campagne_id))
+        .forEach((r) => {
+          const label = labelTypeRevenu(r.type_revenu)
+          autresMap.set(label, (autresMap.get(label) || 0) + (parseFloat(r.montant_dt) || 0))
+        })
+      const result = []
+      if (ventesOlives > 0) result.push({ name: "Ventes d'olives", value: ventesOlives })
+      autresMap.forEach((value, name) => { if (value > 0) result.push({ name, value }) })
+      return result
+    }
+
+    if (type === "charges") {
+      const map = new Map()
+      rawCharges
+        .filter((c) => matchCampagne(c.campagne_id))
+        .forEach((c) => {
+          const label = labelTypeCharge(c.type_charge)
+          map.set(label, (map.get(label) || 0) + (parseFloat(c.montant_dt) || 0))
+        })
+      return Array.from(map.entries())
+        .filter(([, v]) => v > 0)
+        .map(([name, value]) => ({ name, value }))
+    }
+    return []
+  }, [drilldown, rawVentes, rawCharges, rawAutresRevenus])
+
   if (loading) return <Spinner message="Chargement des KPIs..." />
 
   const cards = [
@@ -615,6 +676,15 @@ function Resume({ onNavigateTracteur }) {
 
   function formatMontant(value) {
     return `${value.toLocaleString("fr-FR", { minimumFractionDigits: 3, maximumFractionDigits: 3 })} DT`
+  }
+
+  function labelTypeRevenu(key) {
+    switch (key) {
+      case "location_tracteur": return "Location tracteur"
+      case "vente_huile": return "Vente huile"
+      case "subvention": return "Subvention"
+      default: return key || "Autre"
+    }
   }
 
   function labelTypeCharge(key) {
@@ -746,6 +816,187 @@ function Resume({ onNavigateTracteur }) {
           )
         )}
       </div>
+
+      {/* Bouton analyse de rentabilité */}
+      <div className="mt-4 flex justify-end">
+        <button
+          type="button"
+          onClick={() => setVueRentabilite((v) => !v)}
+          className="inline-flex items-center gap-2 rounded-lg border border-green-600 px-4 py-2 text-sm font-semibold text-green-700 hover:bg-green-50 transition-colors"
+        >
+          {vueRentabilite ? "← Retour au résumé" : "📊 Analyse de rentabilité →"}
+        </button>
+      </div>
+
+      {/* Vue rentabilité — overlay plein écran */}
+      {vueRentabilite && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-gray-50">
+          <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xl font-bold text-gray-800">Analyse de rentabilité</h3>
+            <button
+              type="button"
+              onClick={() => setVueRentabilite(false)}
+              className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100 transition-colors"
+            >
+              ← Retour au résumé
+            </button>
+          </div>
+
+          {/* Graphique */}
+          {margeParCampagneTrie.length > 0 && (
+            <div className="rounded-xl bg-white p-4 shadow">
+              <p className="mb-4 font-semibold text-gray-700">Évolution par campagne</p>
+              <ResponsiveContainer width="100%" height={280}>
+                <BarChart data={margeParCampagneTrie} margin={{ top: 4, right: 16, left: 0, bottom: 4 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis dataKey="annee" tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => v.toLocaleString("fr-FR")} />
+                  <Tooltip
+                    formatter={(value, name) => [`${value.toLocaleString("fr-FR", { minimumFractionDigits: 3, maximumFractionDigits: 3 })} DT`, name]}
+                  />
+                  <Legend />
+                  <Bar dataKey="ca" name="CA" fill="#3b82f6" radius={[4, 4, 0, 0]} cursor="pointer"
+                    onClick={(d) => setDrilldown((prev) => prev?.campagneId === d.campagneId && prev?.type === "ca" ? null : { campagneId: d.campagneId, annee: d.annee, type: "ca" })}
+                  />
+                  <Bar dataKey="charges" name="Charges" fill="#f59e0b" radius={[4, 4, 0, 0]} cursor="pointer"
+                    onClick={(d) => setDrilldown((prev) => prev?.campagneId === d.campagneId && prev?.type === "charges" ? null : { campagneId: d.campagneId, annee: d.annee, type: "charges" })}
+                  />
+                  <Bar dataKey="marge" name="Résultat net" fill="#22c55e" radius={[4, 4, 0, 0]}>
+                    {margeParCampagneTrie.map((entry, i) => (
+                      <Cell key={i} fill={entry.marge >= 0 ? "#22c55e" : "#ef4444"} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+
+          {/* Drill-down camembert */}
+          {drilldown && drilldownData.length > 0 && (
+            <div className="rounded-xl bg-white p-4 shadow">
+              <div className="flex items-center justify-between mb-4">
+                <p className="font-semibold text-gray-700">
+                  {drilldown.type === "ca" ? "CA" : "Charges"} {drilldown.annee} — Répartition
+                </p>
+                <button type="button" onClick={() => setDrilldown(null)} className="text-sm text-gray-400 hover:text-gray-600">✕ Fermer</button>
+              </div>
+              <div className="flex flex-col md:flex-row items-center gap-6">
+                <ResponsiveContainer width="100%" height={240}>
+                  <PieChart>
+                    <Pie
+                      data={drilldownData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={90}
+                      label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)} %)`}
+                      labelLine={true}
+                    >
+                      {drilldownData.map((_, i) => (
+                        <Cell key={i} fill={
+                          drilldown.type === "ca"
+                            ? ["#3b82f6", "#60a5fa", "#1d4ed8", "#93c5fd", "#2563eb"][i % 5]
+                            : ["#f59e0b", "#ef4444", "#6b7280", "#8b5cf6", "#22c55e", "#ec4899"][i % 6]
+                        } />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(v) => v.toLocaleString("fr-FR", { minimumFractionDigits: 3, maximumFractionDigits: 3 }) + " DT"} />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
+
+          {/* Tableau par campagne */}
+          <div className="rounded-xl bg-white p-4 shadow">
+            <p className="mb-4 font-semibold text-gray-700">Détail par campagne</p>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200 text-sm">
+                <thead className="bg-gray-50">
+                  <tr>
+                    {["Campagne", "Récolte (kg)", "CA", "Charges", "Résultat net", "Marge %", "Coût/kg", "Prix moy./kg"].map((h) => (
+                      <th key={h} className="px-3 py-2 text-right first:text-left font-medium text-gray-600 whitespace-nowrap">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 bg-white">
+                  {margeParCampagneTrie.length === 0 ? (
+                    <tr><td colSpan={8} className="px-3 py-3 text-center text-gray-500">Aucune donnée disponible.</td></tr>
+                  ) : margeParCampagneTrie.map((ligne, idx) => {
+                    const pct = ligne.ca > 0 ? (ligne.marge / ligne.ca) * 100 : null
+                    return (
+                      <tr key={idx}>
+                        <td className="px-3 py-2 text-gray-800">{ligne.annee}</td>
+                        <td className="px-3 py-2 text-right text-gray-800">
+                          {ligne.kg > 0 ? ligne.kg.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " kg" : "—"}
+                        </td>
+                        <td className="px-3 py-2 text-right text-gray-800">{formatMontant(ligne.ca)}</td>
+                        <td className="px-3 py-2 text-right text-gray-800">{formatMontant(ligne.charges)}</td>
+                        <td className={`px-3 py-2 text-right font-semibold ${ligne.marge >= 0 ? "text-green-700" : "text-red-600"}`}>
+                          {formatMontant(ligne.marge)}
+                        </td>
+                        <td className={`px-3 py-2 text-right font-semibold ${ligne.marge >= 0 ? "text-green-700" : "text-red-600"}`}>
+                          {pct !== null ? `${pct.toFixed(1)} %` : "—"}
+                        </td>
+                        <td className="px-3 py-2 text-right text-gray-800">
+                          {ligne.coutParKg !== null ? ligne.coutParKg.toLocaleString("fr-FR", { minimumFractionDigits: 3, maximumFractionDigits: 3 }) + " DT" : "—"}
+                        </td>
+                        <td className="px-3 py-2 text-right text-gray-800">
+                          {ligne.prixMoyenKg !== null ? ligne.prixMoyenKg.toLocaleString("fr-FR", { minimumFractionDigits: 3, maximumFractionDigits: 3 }) + " DT" : "—"}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Tableau par parcelle */}
+          <div className="rounded-xl bg-white p-4 shadow">
+            <p className="mb-4 font-semibold text-gray-700">Détail par parcelle</p>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200 text-sm">
+                <thead className="bg-gray-50">
+                  <tr>
+                    {["Parcelle", "Récolte (kg)", "CA", "Charges allouées*", "Résultat net", "Marge %"].map((h) => (
+                      <th key={h} className="px-3 py-2 text-right first:text-left font-medium text-gray-600 whitespace-nowrap">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 bg-white">
+                  {margeParParcelleTrie.length === 0 ? (
+                    <tr><td colSpan={6} className="px-3 py-3 text-center text-gray-500">Aucune donnée disponible.</td></tr>
+                  ) : margeParParcelleTrie.map((ligne, idx) => {
+                    const pct = ligne.ca > 0 ? (ligne.marge / ligne.ca) * 100 : null
+                    return (
+                      <tr key={idx}>
+                        <td className="px-3 py-2 text-gray-800">{ligne.parcelleNom}</td>
+                        <td className="px-3 py-2 text-right text-gray-800">
+                          {ligne.recolte.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg
+                        </td>
+                        <td className="px-3 py-2 text-right text-gray-800">{formatMontant(ligne.ca)}</td>
+                        <td className="px-3 py-2 text-right text-gray-800">{formatMontant(ligne.chargesAllouees)}</td>
+                        <td className={`px-3 py-2 text-right font-semibold ${ligne.marge >= 0 ? "text-green-700" : "text-red-600"}`}>
+                          {formatMontant(ligne.marge)}
+                        </td>
+                        <td className={`px-3 py-2 text-right font-semibold ${ligne.marge >= 0 ? "text-green-700" : "text-red-600"}`}>
+                          {pct !== null ? `${pct.toFixed(1)} %` : "—"}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+              <p className="mt-2 text-xs text-gray-400 italic">* Charges allouées proportionnellement à la quantité récoltée par parcelle.</p>
+            </div>
+          </div>
+          </div>
+        </div>
+      )}
 
       {/* Modale — Chiffre d'affaires */}
       <Modal

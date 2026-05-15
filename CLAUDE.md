@@ -102,7 +102,7 @@ Idées issues d'une réflexion terrain (point de vue agriculteur). À prioriser 
 - [ ] **Stock d'huile** : Suivi des litres produits après pressage, vendus et restants. Nouveau module avec formulaire + tableau + KPIs.
 - [ ] **Bons du moulin (maâsra)** : Enregistrer les bons de livraison au moulin — taux d'humidité, taux de matière grasse, rendement en huile, date. Lier à une campagne.
 - [ ] **Main d'œuvre nominative** : Saisir les ouvriers par nom avec nombre de jours travaillés et montant payé, plutôt qu'un coût global. Permettre de retrouver les bons ouvriers d'une saison à l'autre.
-- [ ] **Carnet de traitements phytosanitaires** : Enregistrer chaque traitement (produit, dose, parcelle, date). Historique consultable par parcelle et par campagne. ⚠️ EN ATTENTE — à confirmer avec le père (vérifie s'il fait des traitements sur l'oliveraie).
+- [ ] **Carnet de traitements phytosanitaires** : Enregistrer chaque traitement (produit, dose, parcelle, date). Historique consultable par parcelle et par campagne. ⚠️ EN ATTENTE — à confirmer avec ton père (vérifie s'il fait des traitements sur l'oliveraie).
 - [ ] **Tableau de rentabilité** : Vue synthétique — recettes vs charges par hectare, par arbre, par campagne. Basé sur les données existantes.
 - [ ] **Alertes calendrier agricole** (détail session 2026-05-09) : Bannières dans le Résumé aux moments clés de la saison oléicole tunisienne. Calendrier pré-configuré : taille (jan-fév), débourrement (mars), floraison (avr-mai), surveillance mouche (juin-août), véraison (sept-oct), récolte (oct-nov), bilan (déc). Alertes déclenchées aussi par les données de l'app (DAR, retreatment, charges manquantes). Configurable : activer/désactiver, décaler les dates, ajouter alertes personnalisées. Pas de nouvelle table Supabase requise (calendrier en dur + localStorage). ✅ Validé par l'utilisateur.
 - [ ] **Planning de taille** (détail session 2026-05-09) : Organiser le travail de taille hivernal. Vue calendrier par semaine (janvier-mars), assignation parcelle + équipe + type de taille (fructification, rajeunissement, sanitaire, formation). Suivi prévu vs réalisé avec coût estimé vs coût réel. Bilan de fin de saison. Nécessite une table `planning_taille` en base Supabase (accord requis). ✅ Validé par l'utilisateur.
@@ -113,7 +113,7 @@ Idées issues d'une réflexion terrain (point de vue agriculteur). À prioriser 
 
 ### Nécessite modification de la base de données (accord explicite requis)
 - [ ] **Fiche par arbre** : Créer une table `arbres` en base. Chaque arbre lié à une parcelle, avec variété, âge, historique de rendement, état sanitaire. Visualisation sur carte Leaflet.
-- [ ] **Carnet de traitements phytosanitaires** (détail session 2026-05-09) : Nécessite une table `traitements` en base. Champs : campagne_id, parcelle_nom, produit, cible (ravageur), dose, unité, surface_ha, date_traitement, delai_retreatment (jours), DAR (délai avant récolte), opérateur, notes. Ravageurs pré-configurés : Mouche de l'olive (Bactrocera oleae), Teigne (Prays oleae), Œil de paon (Spilocaea oleagina), Cochenille noire (Saissetia oleae), Verticilliose. Fonctions : alertes retreatment automatiques, alerte DAR avant récolte, historique par parcelle/campagne, coût total intrants. ⚠️ EN ATTENTE accord DB + confirmation terrain avec le père.
+- [ ] **Carnet de traitements phytosanitaires** (détail session 2026-05-09) : Nécessite une table `traitements` en base. Champs : campagne_id, parcelle_nom, produit, cible (ravageur), dose, unité, surface_ha, date_traitement, delai_retreatment (jours), DAR (délai avant récolte), opérateur, notes. Ravageurs pré-configurés : Mouche de l'olive (Bactrocera oleae), Teigne (Prays oleae), Œil de paon (Spilocaea oleagina), Cochenille noire (Saissetia oleae), Verticilliose. Fonctions : alertes retreatment automatiques, alerte DAR avant récolte, historique par parcelle/campagne, coût total intrants. ⚠️ EN ATTENTE accord DB + confirmation terrain avec ton père.
 
 ### Vision produit — Stratégie commerciale (session 2026-05-09)
 Une seule app, un seul codebase. Deux niveaux d'accès :
@@ -123,7 +123,7 @@ Une seule app, un seul codebase. Deux niveaux d'accès :
 - Pas de duplication de codebase — les fonctionnalités premium sont cachées derrière un feature flag (`plan: free | premium`) dans le profil utilisateur.
 
 #### Cible commerciale immédiate
-L'entourage du père (frères, sœurs, héritiers d'exploitations familiales) = premiers clients naturels. Acquisition par bouche-à-oreille terrain, sans marketing.
+L'entourage de ton père (frères, sœurs, héritiers d'exploitations familiales) = premiers clients naturels. Acquisition par bouche-à-oreille terrain, sans marketing.
 
 #### Vision long terme — Extension à d'autres cultures
 L'app est aujourd'hui spécialisée oliveraie. À terme, l'architecture peut s'étendre à d'autres types de récoltes (agrumes, dattes, céréales, vignes). Le domaine métier (campagnes, récolte, ventes, charges) est générique — seuls les calendriers agricoles et les ravageurs sont spécifiques à la culture.
@@ -138,28 +138,62 @@ Système de langues à implémenter : **Français / Arabe / Anglais**.
 
 Ordre d'implémentation recommandé :
 1. Développer les nouvelles fonctionnalités (alertes, planning taille...)
-2. Tester en conditions réelles sur le compte du père
+2. Tester en conditions réelles sur le compte de ton père
 3. Ajouter l'architecture multi-utilisateurs + écran login
 4. Ajouter le système free/premium
 5. Créer le compte démo (voir ci-dessous)
 6. Ouvrir au public
 
 #### Compte démo (superutilisateur)
-Un compte démo pré-rempli avec des données fictives réalistes pour présenter l'app à des prospects sans exposer les données privées du père.
+Un compte démo pré-rempli avec des données fictives réalistes pour présenter l'app à des prospects sans exposer les données privées de ton père.
 - Identifiants fixes : `demo@olive-app.tn` / mot de passe simple
 - Données fictives : exploitation "Domaine El Baraka", 6 ha, 3 parcelles, 3 campagnes d'historique
 - Mode lecture seule (ou reset automatique toutes les 24h pour éviter que les données démo soient modifiées)
 - Badge visible "MODE DÉMO" affiché en permanence dans l'interface
 - Accès premium complet pour montrer toutes les fonctionnalités
 
-### Multi-utilisateurs — Architecture future (accord explicite requis)
-Permettre à d'autres agriculteurs d'utiliser l'app avec leurs propres données isolées.
-Ce chantier est le plus structurant de tous — il touche à toute l'architecture.
-- [ ] **Authentification multi-utilisateurs** : Chaque utilisateur se connecte avec son propre compte (email/password). Supabase Auth est déjà là mais pas exploité pour l'isolation des données.
-- [ ] **Isolation des données (RLS)** : Chaque utilisateur ne voit que ses propres campagnes, récoltes, ventes, charges. Nécessite d'ajouter une colonne `user_id` sur toutes les tables + activation des Row Level Security (RLS) dans Supabase. ⚠️ Modification majeure du schéma DB.
-- [ ] **Profil utilisateur** : Nom, nom de l'exploitation, région, surface totale, photo.
-- [ ] **Partage d'exploitation** : Permettre à un utilisateur d'inviter un autre (ex: associé, expert agricole) en lecture seule ou en édition.
-- [ ] **Écran de connexion** : Page login/signup à créer. Actuellement l'app s'ouvre directement sans authentification.
+### Multi-utilisateurs + Landing page — Chantier unifié (session 2026-05-15)
+Brainstorm effectué. Ce chantier regroupe la landing page, l'auth et l'isolation des données — les trois sont liés et doivent partir ensemble.
+
+#### Pourquoi tout en un seul chantier
+Sans `user_id` sur les tables et filtrage dans les requêtes, tous les utilisateurs connectés verraient les mêmes données (celles de ton père). La landing mène au signup, le signup nécessite l'isolation. On ne peut pas faire l'un sans l'autre.
+
+#### Landing page (nouvel écran d'accueil)
+Affiché quand l'utilisateur n'est pas connecté. Style produit moderne (Linear, Notion) intégré dans l'app React.
+- Hero + tagline
+- Présentation de chaque feature (récolte, ventes, charges, carte)
+- Témoignage
+- CTA : "Essai gratuit" / "Se connecter"
+- Basé sur le contenu du `onepager.html` déjà créé
+- Route : `App.jsx` bascule entre `<LandingPage />` et l'app selon la session Supabase Auth
+
+#### Auth (login / signup)
+- Supabase Auth déjà configuré dans le projet, non exploité pour l'isolation
+- Ajouter écoute `onAuthStateChange` dans App.jsx
+- Créer `LoginPage.jsx` / `SignupPage.jsx`
+- Email + password dans un premier temps
+
+#### Isolation des données
+- Ajouter colonne `user_id` sur toutes les tables (campagnes, recolte_journaliere, ventes, charges, parcelles)
+- Mettre à jour toutes les requêtes dans DataProvider.jsx et les formulaires pour filtrer par `user_id`
+- Migration des données de ton père : un `UPDATE` SQL dans Supabase dashboard pour assigner son `user_id` à toutes ses lignes existantes
+- RLS (Row Level Security) Supabase en complément pour sécuriser côté serveur
+
+#### Stratégie pour ne pas casser la prod de ton père
+- Tout le chantier se développe sur une branche dédiée
+- Le père continue sur `main` sans interruption
+- Avant le merge : créer son compte Supabase Auth + migrer ses données + tester avec deux comptes distincts
+
+#### Tâches
+- [ ] Landing page (`LandingPage.jsx`)
+- [ ] Login / Signup (`LoginPage.jsx`, `SignupPage.jsx`)
+- [ ] Auth state dans `App.jsx` (bascule landing ↔ app)
+- [ ] Colonne `user_id` sur toutes les tables (migration SQL)
+- [ ] Filtrage par `user_id` dans toutes les requêtes
+- [ ] Migration des données de ton père
+- [ ] RLS Supabase
+- [ ] Tests avec deux comptes distincts avant merge
+
 ⚠️ Ce chantier est un prérequis obligatoire avant tout déploiement public de l'app.
 
 ### Réservé pour une version "grands agriculteurs" (non prioritaire)

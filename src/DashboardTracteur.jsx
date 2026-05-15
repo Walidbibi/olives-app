@@ -333,13 +333,46 @@ function DashboardTracteur({ equipement, onRetourProfil }) {
       commentaire: form.commentaire || null,
     }
 
+    const montant = nb * prix
+
     let dbError
     if (editingActivite) {
       const { error } = await supabase.from("activite_tracteur").update(payload).eq("id", editingActivite.id)
       dbError = error
+      if (!error) {
+        const wasLocation = editingActivite.type_activite === "sous_traitance"
+        const isLocation = payload.type_activite === "sous_traitance"
+        const descKey = `activite_tracteur:${editingActivite.id}`
+        if (wasLocation && isLocation) {
+          await supabase.from("autre_revenu")
+            .update({ montant_dt: montant, date: payload.date_activite, campagne_id: payload.campagne_id || null })
+            .eq("description", descKey)
+        } else if (wasLocation && !isLocation) {
+          await supabase.from("autre_revenu").delete().eq("description", descKey)
+        } else if (!wasLocation && isLocation) {
+          await supabase.from("autre_revenu").insert([{
+            campagne_id: payload.campagne_id || null,
+            date: payload.date_activite,
+            type_revenu: "location_tracteur",
+            montant_dt: montant,
+            description: descKey,
+            equipement_id: payload.equipement_id,
+          }])
+        }
+      }
     } else {
-      const { error } = await supabase.from("activite_tracteur").insert([payload])
+      const { data: inserted, error } = await supabase.from("activite_tracteur").insert([payload]).select().single()
       dbError = error
+      if (!error && payload.type_activite === "sous_traitance") {
+        await supabase.from("autre_revenu").insert([{
+          campagne_id: payload.campagne_id || null,
+          date: payload.date_activite,
+          type_revenu: "location_tracteur",
+          montant_dt: montant,
+          description: `activite_tracteur:${inserted.id}`,
+          equipement_id: payload.equipement_id,
+        }])
+      }
     }
     setSaving(false)
 
@@ -352,6 +385,9 @@ function DashboardTracteur({ equipement, onRetourProfil }) {
     if (!window.confirm(`Supprimer l'activité du ${activite.date_activite} (${activite.nb_oliviers} oliviers) ?`)) return
     setDeletingId(activite.id)
     const { error } = await supabase.from("activite_tracteur").delete().eq("id", activite.id)
+    if (!error && activite.type_activite === "sous_traitance") {
+      await supabase.from("autre_revenu").delete().eq("description", `activite_tracteur:${activite.id}`)
+    }
     setDeletingId(null)
     if (error) { console.error(error); return }
     setRefreshKey((k) => k + 1)
