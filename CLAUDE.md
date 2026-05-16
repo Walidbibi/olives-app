@@ -102,7 +102,7 @@ Idées issues d'une réflexion terrain (point de vue agriculteur). À prioriser 
 - [ ] **Stock d'huile** : Suivi des litres produits après pressage, vendus et restants. Nouveau module avec formulaire + tableau + KPIs.
 - [ ] **Bons du moulin (maâsra)** : Enregistrer les bons de livraison au moulin — taux d'humidité, taux de matière grasse, rendement en huile, date. Lier à une campagne.
 - [ ] **Main d'œuvre nominative** : Saisir les ouvriers par nom avec nombre de jours travaillés et montant payé, plutôt qu'un coût global. Permettre de retrouver les bons ouvriers d'une saison à l'autre.
-- [ ] **Carnet de traitements phytosanitaires** : Enregistrer chaque traitement (produit, dose, parcelle, date). Historique consultable par parcelle et par campagne. ⚠️ EN ATTENTE — à confirmer avec le père (vérifie s'il fait des traitements sur l'oliveraie).
+- ~~**Carnet de traitements phytosanitaires**~~ : ❌ Abandonné — le père ne fait pas de traitement chimique (uniquement taille, labour, engrais). Pas de DAR ni de retreatment à suivre. Confirmé session 2026-05-16.
 - [ ] **Tableau de rentabilité** : Vue synthétique — recettes vs charges par hectare, par arbre, par campagne. Basé sur les données existantes.
 - [ ] **Alertes calendrier agricole** (détail session 2026-05-09) : Bannières dans le Résumé aux moments clés de la saison oléicole tunisienne. Calendrier pré-configuré : taille (jan-fév), débourrement (mars), floraison (avr-mai), surveillance mouche (juin-août), véraison (sept-oct), récolte (oct-nov), bilan (déc). Alertes déclenchées aussi par les données de l'app (DAR, retreatment, charges manquantes). Configurable : activer/désactiver, décaler les dates, ajouter alertes personnalisées. Pas de nouvelle table Supabase requise (calendrier en dur + localStorage). ✅ Validé par l'utilisateur.
 - [ ] **Planning de taille** (détail session 2026-05-09) : Organiser le travail de taille hivernal. Vue calendrier par semaine (janvier-mars), assignation parcelle + équipe + type de taille (fructification, rajeunissement, sanitaire, formation). Suivi prévu vs réalisé avec coût estimé vs coût réel. Bilan de fin de saison. Nécessite une table `planning_taille` en base Supabase (accord requis). ✅ Validé par l'utilisateur.
@@ -113,7 +113,7 @@ Idées issues d'une réflexion terrain (point de vue agriculteur). À prioriser 
 
 ### Nécessite modification de la base de données (accord explicite requis)
 - [ ] **Fiche par arbre** : Créer une table `arbres` en base. Chaque arbre lié à une parcelle, avec variété, âge, historique de rendement, état sanitaire. Visualisation sur carte Leaflet.
-- [ ] **Carnet de traitements phytosanitaires** (détail session 2026-05-09) : Nécessite une table `traitements` en base. Champs : campagne_id, parcelle_nom, produit, cible (ravageur), dose, unité, surface_ha, date_traitement, delai_retreatment (jours), DAR (délai avant récolte), opérateur, notes. Ravageurs pré-configurés : Mouche de l'olive (Bactrocera oleae), Teigne (Prays oleae), Œil de paon (Spilocaea oleagina), Cochenille noire (Saissetia oleae), Verticilliose. Fonctions : alertes retreatment automatiques, alerte DAR avant récolte, historique par parcelle/campagne, coût total intrants. ⚠️ EN ATTENTE accord DB + confirmation terrain avec le père.
+- ~~**Carnet de traitements phytosanitaires**~~ : ❌ Abandonné — pas de traitement chimique sur cette exploitation. Confirmé session 2026-05-16.
 
 ### Vision produit — Stratégie commerciale (session 2026-05-09)
 Une seule app, un seul codebase. Deux niveaux d'accès :
@@ -168,6 +168,12 @@ Ces fonctionnalités sont trop avancées pour l'exploitation familiale actuelle 
 - [ ] **Bons du moulin (maâsra)** : Enregistrement des bons de livraison au moulin.
 - [ ] **Main d'œuvre nominative** : Ouvriers par nom, jours travaillés, montant payé.
 - [ ] **Fiche par arbre** : Table `arbres` en base, visualisation Leaflet.
+
+### Pratiques terrain confirmées (session 2026-05-16)
+Le père fait principalement : **taille** (hivernale), **labour** (inter-rangs), **engrais** (pas de produits chimiques). Pas de traitements phytosanitaires, pas de DAR à gérer. Cela oriente les priorités :
+- Planning de taille ✅ très pertinent
+- Suivi engrais (produit, date, parcelle, coût) → à considérer comme extension légère des charges
+- Carnet phytosanitaire ❌ hors périmètre pour cette exploitation
 
 ### Notes d'implémentation
 - Priorité actuelle : fonctionnalités validées pour l'exploitation familiale (alertes calendrier, planning taille).
