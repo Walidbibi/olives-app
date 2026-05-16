@@ -46,6 +46,7 @@ resume | campagnes | recolte | ventes | charges
 - don → "Dons"
 - vehicule → "Autres charges véhicules"
 - equipement → "Équipements"
+- traitement_oliviers → "Traitement oliviers" (engrais, labour, taille) — à implémenter (décidé session 2026-05-16)
 
 ## Commands
 - Install dependencies:
