@@ -556,9 +556,6 @@ function FormulaireCharges() {
 
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">
-              Campagne
-            </label>
             {loadingCampagnes ? (
               <div className="text-sm text-gray-500">Chargement des campagnes...</div>
             ) : campagnes.length === 0 ? (
@@ -573,7 +570,7 @@ function FormulaireCharges() {
               >
                 {campagnes.map((c) => (
                   <option key={c.id} value={c.id}>
-                    {c.annee} – {c.statut}
+                    Campagne {c.annee} — {c.statut === "en_cours" ? "En cours" : "Terminée"}
                   </option>
                 ))}
               </select>

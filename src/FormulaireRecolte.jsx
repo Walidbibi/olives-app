@@ -325,17 +325,19 @@ function FormulaireRecolte({ onDemanderVente }) {
   }
 
   function renderParcelleBadge(parcelleId) {
-    const nom = nomParcelleDepuisId(parcelleId)
+    const COLORS = [
+      "bg-blue-50 text-blue-700",
+      "bg-amber-50 text-amber-700",
+      "bg-emerald-50 text-emerald-700",
+      "bg-violet-50 text-violet-700",
+      "bg-rose-50 text-rose-700",
+    ]
+    const idx = parcelles.findIndex(p => String(p.id) === String(parcelleId))
+    const nom = idx >= 0 ? parcelles[idx].nom : nomParcelleDepuisId(parcelleId)
     if (!nom || nom === "-") return "-"
-    const baseClass =
-      "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
-    if (nom.toUpperCase().includes("CHOKRI"))
-      return <span className={`${baseClass} bg-blue-50 text-blue-700`}>{nom}</span>
-    if (nom.toUpperCase().includes("HBAIBA"))
-      return <span className={`${baseClass} bg-amber-50 text-amber-700`}>{nom}</span>
-    if (nom.toUpperCase().includes("SIDI"))
-      return <span className={`${baseClass} bg-emerald-50 text-emerald-700`}>{nom}</span>
-    return <span className={`${baseClass} bg-gray-50 text-gray-700`}>{nom}</span>
+    const colorClass = idx >= 0 ? COLORS[idx % COLORS.length] : "bg-gray-50 text-gray-700"
+    const baseClass = "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
+    return <span className={`${baseClass} ${colorClass}`}>{nom}</span>
   }
 
   function renderTypeBadge(type) {
@@ -684,9 +686,6 @@ function FormulaireRecolte({ onDemanderVente }) {
 
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">
-              Campagne active
-            </label>
             {loadingCampagnes ? (
               <div className="flex items-center gap-2 text-sm text-gray-500">
                 <div className="w-4 h-4 border-2 border-gray-200 border-t-blue-500 rounded-full animate-spin" />
@@ -707,7 +706,7 @@ function FormulaireRecolte({ onDemanderVente }) {
               >
                 {campagnes.map((c) => (
                   <option key={c.id} value={c.id}>
-                    {c.annee} – {c.statut}
+                    Campagne {c.annee} — {c.statut === "en_cours" ? "En cours" : "Terminée"}
                   </option>
                 ))}
               </select>

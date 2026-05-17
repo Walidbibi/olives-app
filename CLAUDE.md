@@ -37,7 +37,15 @@ Application de gestion d'exploitation oléicole (production d'olives).
 Entités principales : Campagnes, Récolte, Ventes, Charges.
 
 ### Onglets de navigation
-resume | campagnes | recolte | ventes | charges
+resume | campagnes | recolte | ventes | charges | traitements | carte
+
+### Onglet Traitements — ajouté session 2026-05-17
+`FormulaireTraitements.jsx` — journal des actions terrain par campagne (taille, labour, engrais, désherbage, autre).
+- Même comportement que Récolte/Ventes : filtre par campagne, pagination, tri, cards mobile, filtres, validation temps réel
+- Badges couleur par parcelle (index-based : bleu, amber, vert, violet, rose)
+- Notes obligatoire si type = "autre"
+- Table `traitements` en Supabase : `campagne_id`, `parcelle_id`, `date`, `type_action`, `notes`
+- ⚠️ **Reste à faire** : ajouter le type de charge `traitement_oliviers` dans `FormulaireCharges.jsx` (décidé session 2026-05-16, non implémenté). Sous-types : engrais/fertilisation, labour, taille, salaire laboureurs, autre (préciser).
 
 ### Types de charges (clés en base Supabase)
 - main_oeuvre → "Main d'oeuvre"
@@ -106,7 +114,11 @@ Idées issues d'une réflexion terrain (point de vue agriculteur). À prioriser 
 - [ ] **Main d'œuvre nominative** : Saisir les ouvriers par nom avec nombre de jours travaillés et montant payé, plutôt qu'un coût global. Permettre de retrouver les bons ouvriers d'une saison à l'autre.
 - ~~**Carnet de traitements phytosanitaires**~~ : ❌ Abandonné — le père ne fait pas de traitement chimique (uniquement taille, labour, engrais). Pas de DAR ni de retreatment à suivre. Confirmé session 2026-05-16.
 - [ ] **Timeline rétroactive par campagne** (session 2026-05-16) : Vue chronologique dans l'onglet Campagnes — tout ce qui s'est passé pendant une campagne affiché sur une ligne de temps : récoltes (kg, parcelle), ventes (montant, acheteur), charges (type, montant), traitements (labour, taille, engrais). Données existantes suffisent, aucune modification DB requise. Affichage possible en feed vertical trié par date ou en mini-calendrier mensuel. Utile pour comprendre d'un coup d'œil le déroulé d'une saison.
-- [ ] **Onglet Traitement** (session 2026-05-16) : Journal d'actions terrain — enregistrer ce qui a été fait, quand, et sur quelle parcelle (taille, labour, engrais, autre). Entité distincte des charges : une entrée = date + parcelle + action + notes optionnelles. Les coûts associés (salaire laboureurs, achat engrais) restent dans l'onglet Charges avec le type `traitement_oliviers`, sans lien direct entre les deux. ✅ Création table `traitements` validée (session 2026-05-16). Schéma : `id` (uuid PK), `campagne_id` (FK → campagne), `parcelle_id` (FK → parcelles), `date` (date), `type_action` (text : taille / labour / engrais / autre), `notes` (text nullable), `created_at` (timestamptz).
+- [x] **Onglet Traitement** (session 2026-05-16, décisions finales 2026-05-17, implémenté 2026-05-17) : Journal d'actions terrain — enregistrer ce qui a été fait, quand, et sur quelle parcelle (taille, labour, engrais, autre). Entité distincte des charges : une entrée = date + parcelle + action + notes optionnelles. Les coûts associés restent dans Charges avec le type `traitement_oliviers`. Schéma table `traitements` : `id` (uuid PK), `campagne_id` (FK → campagne), `parcelle_id` (FK → parcelles), `date` (date), `type_action` (text : taille / labour / engrais / désherbage / autre), `notes` (text nullable), `created_at` (timestamptz).
+  - Navigation : nouvel onglet "Traitements" au même niveau que Récolte/Ventes/Charges
+  - Comportement identique à Récolte et Ventes : filtre par campagne en haut, pagination, tri, cards mobile
+  - Champ `notes` devient obligatoire si `type_action === "autre"`
+  - ⚠️ Table `traitements` à créer en Supabase avant l'implémentation
 - [ ] **Tableau de rentabilité** : Vue synthétique — recettes vs charges par hectare, par arbre, par campagne. Basé sur les données existantes.
 - [ ] **Alertes calendrier agricole** (détail session 2026-05-09) : Bannières dans le Résumé aux moments clés de la saison oléicole tunisienne. Calendrier pré-configuré : taille (jan-fév), débourrement (mars), floraison (avr-mai), surveillance mouche (juin-août), véraison (sept-oct), récolte (oct-nov), bilan (déc). Alertes déclenchées aussi par les données de l'app (DAR, retreatment, charges manquantes). Configurable : activer/désactiver, décaler les dates, ajouter alertes personnalisées. Pas de nouvelle table Supabase requise (calendrier en dur + localStorage). ✅ Validé par l'utilisateur.
 - [ ] **Planning de taille** (détail session 2026-05-09) : Organiser le travail de taille hivernal. Vue calendrier par semaine (janvier-mars), assignation parcelle + équipe + type de taille (fructification, rajeunissement, sanitaire, formation). Suivi prévu vs réalisé avec coût estimé vs coût réel. Bilan de fin de saison. Nécessite une table `planning_taille` en base Supabase (accord requis). ✅ Validé par l'utilisateur.
@@ -232,7 +244,7 @@ Données de récolte au survol déjà implémentées (tooltip live depuis Supaba
 ### Nécessite données supplémentaires
 - [ ] **Récolte en cours en temps réel** : Afficher kg récoltés sur la parcelle pour la campagne active.
 - [ ] **Planning de taille sur carte** : Voir quelles parcelles sont taillées / à tailler (lié au planning de taille).
-- [ ] **Carnet de traitements sur carte** : Quelles parcelles traitées récemment, alertes DAR.
+- [ ] **Traitements sur carte** : Colorier les parcelles selon le dernier traitement effectué (taille, labour, engrais) — données disponibles dans la table `traitements` une fois l'onglet implémenté. Amélioration possible après l'onglet Traitements.
 
 ### Vision long terme
 - [ ] **Multi-parcelles** : Ajouter les autres parcelles de l'exploitation avec leurs polygones GPS.

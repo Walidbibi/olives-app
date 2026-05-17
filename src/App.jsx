@@ -4,6 +4,7 @@ import FormulaireCampagne from "./FormulaireCampagne"
 import FormulaireRecolte from "./FormulaireRecolte"
 import FormulaireVente from "./FormulaireVente"
 import FormulaireCharges from "./FormulaireCharges"
+import FormulaireTraitements from "./FormulaireTraitements"
 import Resume from "./Resume"
 import ProfilExploitation from "./ProfilExploitation"
 import DashboardTracteur from "./DashboardTracteur"
@@ -17,6 +18,7 @@ const onglets = [
   { id: "recolte", label: "Récolte", icon: "🫒" },
   { id: "ventes", label: "Ventes", icon: "💰" },
   { id: "charges", label: "Charges", icon: "📉" },
+  { id: "traitements", label: "Traitements", icon: "🌱" },
   { id: "carte", label: "Carte", icon: "🗺️" },
   // IMPORTANT : pas d'entrée "profil" ici
 ]
@@ -162,6 +164,8 @@ function App() {
         )}
 
         {ongletActif === "charges" && <FormulaireCharges />}
+
+        {ongletActif === "traitements" && <FormulaireTraitements />}
 
         {ongletActif === "carte" && (
           <CarteExploitation

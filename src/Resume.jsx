@@ -4,7 +4,7 @@ import Spinner from "./Spinner"
 import Modal from "./Modal"
 import ExportExcel from "./ExportExcel"
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
+  BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Cell, Legend, PieChart, Pie,
 } from "recharts"
 
@@ -59,6 +59,7 @@ function Resume({ onNavigateTracteur }) {
   const [rawVentes, setRawVentes] = useState([])
   const [rawCharges, setRawCharges] = useState([])
   const [rawAutresRevenus, setRawAutresRevenus] = useState([])
+  const [caBarCampagneId, setCaBarCampagneId] = useState(null)
 
   useEffect(() => {
     async function loadCampagnes() {
@@ -80,7 +81,7 @@ function Resume({ onNavigateTracteur }) {
 
       let ventesQuery = supabase
         .from("vente")
-        .select("id, recolte_id, montant_total_dt, campagne_id")
+        .select("id, recolte_id, montant_total_dt, campagne_id, recolte:recolte_journaliere(parcelle_id)")
 
       let recoltesQuery = supabase
         .from("recolte_journaliere")
@@ -572,6 +573,54 @@ function Resume({ onNavigateTracteur }) {
     [kpi.chargesParCampagne]
   )
 
+  const locationTracteurParCampagne = useMemo(() => {
+    const map = new Map()
+    for (const r of rawAutresRevenus) {
+      if (r.type_revenu !== "location_tracteur") continue
+      const key = r.campagne_id || "null"
+      map.set(key, (map.get(key) || 0) + (parseFloat(r.montant_dt) || 0))
+    }
+    return Array.from(map.entries())
+      .map(([campagneId, montant]) => {
+        const camp = kpi.caParCampagne.find(c => String(c.campagneId) === String(campagneId))
+        return { annee: camp ? camp.annee : campagneId, montant }
+      })
+      .sort((a, b) => String(a.annee).localeCompare(String(b.annee)))
+  }, [rawAutresRevenus, kpi.caParCampagne])
+
+  const caVentesParCampagne = useMemo(() => {
+    const map = new Map()
+    for (const v of rawVentes) {
+      const key = v.campagne_id || "null"
+      map.set(key, (map.get(key) || 0) + (parseFloat(v.montant_total_dt) || 0))
+    }
+    return Array.from(map.entries())
+      .map(([campagneId, ca]) => {
+        const camp = kpi.caParCampagne.find(c => String(c.campagneId) === String(campagneId))
+        return { campagneId, annee: camp ? camp.annee : campagneId, ca }
+      })
+      .sort((a, b) => String(a.annee).localeCompare(String(b.annee)))
+  }, [rawVentes, kpi.caParCampagne])
+
+  const caVentesParParcelle = useMemo(() => {
+    if (!caBarCampagneId) return []
+    const COLORS = ["#3b82f6","#f59e0b","#22c55e","#8b5cf6","#f43f5e","#06b6d4","#84cc16","#fb923c","#e879f9","#2dd4bf"]
+    const map = new Map()
+    for (const v of rawVentes) {
+      if (String(v.campagne_id) !== String(caBarCampagneId)) continue
+      const parcelleId = v.recolte?.parcelle_id || "null"
+      map.set(parcelleId, (map.get(parcelleId) || 0) + (parseFloat(v.montant_total_dt) || 0))
+    }
+    const total = Array.from(map.values()).reduce((s, v) => s + v, 0)
+    return Array.from(map.entries())
+      .sort((a, b) => b[1] - a[1])
+      .map(([parcelleId, value], idx) => {
+        const p = kpi.recolteParParcelle?.find?.(r => String(r.parcelleId) === String(parcelleId))
+        const nom = p ? p.parcelleNom : parcelleId
+        return { name: nom, value, pct: total > 0 ? (value / total * 100).toFixed(1) : "0", fill: COLORS[idx % COLORS.length] }
+      })
+  }, [caBarCampagneId, rawVentes, kpi.recolteParParcelle])
+
   const drilldownData = useMemo(() => {
     if (!drilldown) return []
     const { campagneId, type } = drilldown
@@ -843,6 +892,9 @@ function Resume({ onNavigateTracteur }) {
             </button>
           </div>
 
+          {/* Grille 2x2 des graphiques */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
           {/* Graphique */}
           {margeParCampagneTrie.length > 0 && (
             <div className="rounded-xl bg-white p-4 shadow">
@@ -868,6 +920,29 @@ function Resume({ onNavigateTracteur }) {
                     ))}
                   </Bar>
                 </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+
+          {/* Graphique évolution prix/kg et coût/kg */}
+          {margeParCampagneTrie.filter(c => c.prixMoyenKg !== null || c.coutParKg !== null).length > 0 && (
+            <div className="rounded-xl bg-white p-4 shadow">
+              <p className="mb-4 font-semibold text-gray-700">Évolution prix/kg et coût/kg moyen par campagne</p>
+              <ResponsiveContainer width="100%" height={260}>
+                <LineChart data={margeParCampagneTrie} margin={{ top: 4, right: 16, left: 0, bottom: 4 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis dataKey="annee" tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => v.toLocaleString("fr-FR", { minimumFractionDigits: 3, maximumFractionDigits: 3 })} />
+                  <Tooltip
+                    formatter={(value, name) => [
+                      value !== null ? value.toLocaleString("fr-FR", { minimumFractionDigits: 3, maximumFractionDigits: 3 }) + " DT/kg" : "—",
+                      name,
+                    ]}
+                  />
+                  <Legend />
+                  <Line type="monotone" dataKey="prixMoyenKg" name="Prix moyen/kg" stroke="#3b82f6" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} connectNulls />
+                  <Line type="monotone" dataKey="coutParKg" name="Coût/kg" stroke="#f59e0b" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} connectNulls />
+                </LineChart>
               </ResponsiveContainer>
             </div>
           )}
@@ -910,90 +985,116 @@ function Resume({ onNavigateTracteur }) {
             </div>
           )}
 
-          {/* Tableau par campagne */}
-          <div className="rounded-xl bg-white p-4 shadow">
-            <p className="mb-4 font-semibold text-gray-700">Détail par campagne</p>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200 text-sm">
-                <thead className="bg-gray-50">
-                  <tr>
-                    {["Campagne", "Récolte (kg)", "CA", "Charges", "Résultat net", "Marge %", "Coût/kg", "Prix moy./kg"].map((h) => (
-                      <th key={h} className="px-3 py-2 text-right first:text-left font-medium text-gray-600 whitespace-nowrap">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 bg-white">
-                  {margeParCampagneTrie.length === 0 ? (
-                    <tr><td colSpan={8} className="px-3 py-3 text-center text-gray-500">Aucune donnée disponible.</td></tr>
-                  ) : margeParCampagneTrie.map((ligne, idx) => {
-                    const pct = ligne.ca > 0 ? (ligne.marge / ligne.ca) * 100 : null
-                    return (
-                      <tr key={idx}>
-                        <td className="px-3 py-2 text-gray-800">{ligne.annee}</td>
-                        <td className="px-3 py-2 text-right text-gray-800">
-                          {ligne.kg > 0 ? ligne.kg.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " kg" : "—"}
-                        </td>
-                        <td className="px-3 py-2 text-right text-gray-800">{formatMontant(ligne.ca)}</td>
-                        <td className="px-3 py-2 text-right text-gray-800">{formatMontant(ligne.charges)}</td>
-                        <td className={`px-3 py-2 text-right font-semibold ${ligne.marge >= 0 ? "text-green-700" : "text-red-600"}`}>
-                          {formatMontant(ligne.marge)}
-                        </td>
-                        <td className={`px-3 py-2 text-right font-semibold ${ligne.marge >= 0 ? "text-green-700" : "text-red-600"}`}>
-                          {pct !== null ? `${pct.toFixed(1)} %` : "—"}
-                        </td>
-                        <td className="px-3 py-2 text-right text-gray-800">
-                          {ligne.coutParKg !== null ? ligne.coutParKg.toLocaleString("fr-FR", { minimumFractionDigits: 3, maximumFractionDigits: 3 }) + " DT" : "—"}
-                        </td>
-                        <td className="px-3 py-2 text-right text-gray-800">
-                          {ligne.prixMoyenKg !== null ? ligne.prixMoyenKg.toLocaleString("fr-FR", { minimumFractionDigits: 3, maximumFractionDigits: 3 }) + " DT" : "—"}
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
+          {/* Graphique résultat net + marge % */}
+          {margeParCampagneTrie.length > 0 && (
+            <div className="rounded-xl bg-white p-4 shadow">
+              <p className="mb-4 font-semibold text-gray-700">Évolution du résultat net et de la marge par campagne</p>
+              <ResponsiveContainer width="100%" height={260}>
+                <LineChart
+                  data={margeParCampagneTrie.map(c => ({
+                    ...c,
+                    margePct: c.ca > 0 ? parseFloat(((c.marge / c.ca) * 100).toFixed(1)) : null,
+                  }))}
+                  margin={{ top: 4, right: 40, left: 0, bottom: 4 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis dataKey="annee" tick={{ fontSize: 12 }} />
+                  <YAxis
+                    yAxisId="left"
+                    tick={{ fontSize: 12 }}
+                    tickFormatter={(v) => v.toLocaleString("fr-FR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                  />
+                  <YAxis
+                    yAxisId="right"
+                    orientation="right"
+                    tick={{ fontSize: 12 }}
+                    tickFormatter={(v) => `${v}%`}
+                  />
+                  <Tooltip
+                    formatter={(value, name) => {
+                      if (name === "Marge %") return [value !== null ? `${value} %` : "—", name]
+                      return [value !== null ? value.toLocaleString("fr-FR", { minimumFractionDigits: 3, maximumFractionDigits: 3 }) + " DT" : "—", name]
+                    }}
+                  />
+                  <Legend />
+                  <Line yAxisId="left" type="monotone" dataKey="marge" name="Résultat net" stroke="#22c55e" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} connectNulls />
+                  <Line yAxisId="right" type="monotone" dataKey="margePct" name="Marge %" stroke="#8b5cf6" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} connectNulls />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
-          </div>
+          )}
 
-          {/* Tableau par parcelle */}
-          <div className="rounded-xl bg-white p-4 shadow">
-            <p className="mb-4 font-semibold text-gray-700">Détail par parcelle</p>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200 text-sm">
-                <thead className="bg-gray-50">
-                  <tr>
-                    {["Parcelle", "Récolte (kg)", "CA", "Charges allouées*", "Résultat net", "Marge %"].map((h) => (
-                      <th key={h} className="px-3 py-2 text-right first:text-left font-medium text-gray-600 whitespace-nowrap">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 bg-white">
-                  {margeParParcelleTrie.length === 0 ? (
-                    <tr><td colSpan={6} className="px-3 py-3 text-center text-gray-500">Aucune donnée disponible.</td></tr>
-                  ) : margeParParcelleTrie.map((ligne, idx) => {
-                    const pct = ligne.ca > 0 ? (ligne.marge / ligne.ca) * 100 : null
-                    return (
-                      <tr key={idx}>
-                        <td className="px-3 py-2 text-gray-800">{ligne.parcelleNom}</td>
-                        <td className="px-3 py-2 text-right text-gray-800">
-                          {ligne.recolte.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg
-                        </td>
-                        <td className="px-3 py-2 text-right text-gray-800">{formatMontant(ligne.ca)}</td>
-                        <td className="px-3 py-2 text-right text-gray-800">{formatMontant(ligne.chargesAllouees)}</td>
-                        <td className={`px-3 py-2 text-right font-semibold ${ligne.marge >= 0 ? "text-green-700" : "text-red-600"}`}>
-                          {formatMontant(ligne.marge)}
-                        </td>
-                        <td className={`px-3 py-2 text-right font-semibold ${ligne.marge >= 0 ? "text-green-700" : "text-red-600"}`}>
-                          {pct !== null ? `${pct.toFixed(1)} %` : "—"}
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-              <p className="mt-2 text-xs text-gray-400 italic">* Charges allouées proportionnellement à la quantité récoltée par parcelle.</p>
+          {/* Histogramme location tracteur */}
+          {locationTracteurParCampagne.length > 0 && (
+            <div className="rounded-xl bg-white p-4 shadow">
+              <p className="mb-4 font-semibold text-gray-700">Location tracteur par campagne</p>
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart data={locationTracteurParCampagne} margin={{ top: 4, right: 16, left: 0, bottom: 4 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis dataKey="annee" tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => v.toLocaleString("fr-FR")} />
+                  <Tooltip
+                    formatter={(value) => [
+                      value.toLocaleString("fr-FR", { minimumFractionDigits: 3, maximumFractionDigits: 3 }) + " DT",
+                      "Location tracteur",
+                    ]}
+                  />
+                  <Bar dataKey="montant" name="Location tracteur" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
-          </div>
+          )}
+
+          </div>{/* fin grille 2x2 */}
+
+          {/* CA vente brute par campagne + camembert par parcelle — pleine largeur */}
+          {caVentesParCampagne.length > 0 && (
+            <div className="rounded-xl bg-white p-4 shadow space-y-4">
+              <p className="font-semibold text-gray-700">CA vente brute par campagne</p>
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart data={caVentesParCampagne} margin={{ top: 4, right: 16, left: 0, bottom: 4 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis dataKey="annee" tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => v.toLocaleString("fr-FR")} />
+                  <Tooltip formatter={(value) => [value.toLocaleString("fr-FR", { minimumFractionDigits: 3, maximumFractionDigits: 3 }) + " DT", "CA vente brute"]} />
+                  <Bar dataKey="ca" name="CA vente brute" fill="#3b82f6" radius={[4, 4, 0, 0]} cursor="pointer" onClick={(d) => setCaBarCampagneId(prev => prev === d.campagneId ? null : d.campagneId)}>
+                    {caVentesParCampagne.map((entry) => (
+                      <Cell key={entry.campagneId} fill={caBarCampagneId === entry.campagneId ? "#1d4ed8" : "#3b82f6"} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+
+              {caBarCampagneId && caVentesParParcelle.length > 0 && (
+                <div className="border-t border-gray-100 pt-4">
+                  <p className="mb-3 text-sm font-medium text-gray-600">
+                    Répartition par parcelle — Campagne {caVentesParCampagne.find(c => c.campagneId === caBarCampagneId)?.annee}
+                  </p>
+                  <div className="flex flex-col md:flex-row items-center gap-6">
+                    <ResponsiveContainer width="100%" height={260}>
+                      <PieChart>
+                        <Pie data={caVentesParParcelle} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={55} outerRadius={100}>
+                          {caVentesParParcelle.map((entry, idx) => <Cell key={idx} fill={entry.fill} />)}
+                        </Pie>
+                        <Tooltip formatter={(value, name, props) => [`${value.toLocaleString("fr-FR", { minimumFractionDigits: 3, maximumFractionDigits: 3 })} DT (${props.payload.pct}%)`, props.payload.name]} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="flex flex-col gap-1.5 min-w-max">
+                      {caVentesParParcelle.map((entry, idx) => (
+                        <div key={idx} className="flex items-center gap-2 text-sm">
+                          <span className="inline-block w-3 h-3 rounded-sm flex-shrink-0" style={{ backgroundColor: entry.fill }} />
+                          <span className="text-gray-700 font-medium">{entry.name}</span>
+                          <span className="text-gray-500">{entry.pct}%</span>
+                          <span className="text-gray-400 text-xs">{entry.value.toLocaleString("fr-FR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })} DT</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           </div>
         </div>
       )}
