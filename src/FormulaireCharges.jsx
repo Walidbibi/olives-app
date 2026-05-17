@@ -72,6 +72,7 @@ function FormulaireCharges() {
 
   const [message, setMessage] = useState("")
   const [messageType, setMessageType] = useState("info")
+  const [errors, setErrors] = useState({})
 
   const [modalOuvert, setModalOuvert] = useState(false)
 
@@ -265,6 +266,7 @@ function FormulaireCharges() {
     setBeneficiaire("")
     setEquipementId("")
     setSubmitting(false)
+    setErrors({})
   }
 
   function ouvrirModalCreation() {
@@ -286,6 +288,7 @@ function FormulaireCharges() {
     setDescription(charge.description || "")
     setBeneficiaire(charge.beneficiaire || "")
     setEquipementId(charge.equipement_id || "")
+    setErrors({})
     setModalOuvert(true)
   }
 
@@ -315,38 +318,24 @@ function FormulaireCharges() {
       setSubmitting(false)
       return
     }
-    if (!date || !montantDt || !typeCharge) {
-      setMessageType("error")
-      setMessage("Date, type de charge et montant sont obligatoires.")
+    const newErrors = {}
+    if (!date) newErrors.date = "La date est obligatoire"
+    if (!typeCharge) newErrors.typeCharge = "Le type de charge est obligatoire"
+    if (!montantDt) {
+      newErrors.montantDt = "Le montant est obligatoire"
+    } else {
+      const montantNumber = parseFloat(montantDt)
+      if (Number.isNaN(montantNumber) || montantNumber <= 0) newErrors.montantDt = "Le montant doit être positif"
+    }
+    if (typeCharge === "equipement" && !equipementId) newErrors.equipementId = "Veuillez sélectionner un équipement"
+    if (typeCharge !== "transformation_huile" && sousTypesDisponibles.length > 0 && !sousType) newErrors.sousType = "Le sous-type est obligatoire"
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors)
       setSubmitting(false)
       return
     }
 
     const montantNumber = parseFloat(montantDt)
-    if (Number.isNaN(montantNumber) || montantNumber <= 0) {
-      setMessageType("error")
-      setMessage("Le montant doit être un nombre positif.")
-      setSubmitting(false)
-      return
-    }
-
-    if (typeCharge === "equipement" && !equipementId) {
-      setMessageType("error")
-      setMessage("Veuillez sélectionner un équipement.")
-      setSubmitting(false)
-      return
-    }
-
-    if (
-      typeCharge !== "transformation_huile" &&
-      sousTypesDisponibles.length > 0 &&
-      !sousType
-    ) {
-      setMessageType("error")
-      setMessage("Veuillez sélectionner un sous-type.")
-      setSubmitting(false)
-      return
-    }
 
     const payload = {
       campagne_id: campagneId,
@@ -1007,20 +996,21 @@ function FormulaireCharges() {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Date
+                Date <span className="text-red-500">*</span>
               </label>
               <input
                 type="date"
                 value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-olive-500 focus:ring-olive-500"
-                required
+                onChange={(e) => { setDate(e.target.value); setErrors(prev => ({ ...prev, date: "" })) }}
+                onBlur={() => { if (!date) setErrors(prev => ({ ...prev, date: "La date est obligatoire" })) }}
+                className={`mt-1 block w-full rounded-md border px-3 py-2 text-sm shadow-sm focus:ring-1 ${errors.date ? "border-red-300 focus:border-red-500 focus:ring-red-500" : "border-gray-300 focus:border-olive-500 focus:ring-olive-500"}`}
               />
+              {errors.date && <p className="mt-1 text-xs text-red-600">{errors.date}</p>}
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Type de charge
+                Type de charge <span className="text-red-500">*</span>
               </label>
               <select
                 value={typeCharge}
@@ -1028,18 +1018,13 @@ function FormulaireCharges() {
                   const value = e.target.value
                   setTypeCharge(value)
                   setSousType("")
-                  if (value !== "equipement") {
-                    setEquipementId("")
-                  }
-                  if (value !== "recolte") {
-                    setNbOuvriers("")
-                  }
-                  if (value !== "don") {
-                    setBeneficiaire("")
-                  }
+                  setErrors(prev => ({ ...prev, typeCharge: "", sousType: "", equipementId: "" }))
+                  if (value !== "equipement") setEquipementId("")
+                  if (value !== "recolte") setNbOuvriers("")
+                  if (value !== "don") setBeneficiaire("")
                 }}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-olive-500 focus:ring-olive-500"
-                required
+                onBlur={() => { if (!typeCharge) setErrors(prev => ({ ...prev, typeCharge: "Le type de charge est obligatoire" })) }}
+                className={`mt-1 block w-full rounded-md border px-3 py-2 text-sm shadow-sm focus:ring-1 ${errors.typeCharge ? "border-red-300 focus:border-red-500 focus:ring-red-500" : "border-gray-300 focus:border-olive-500 focus:ring-olive-500"}`}
               >
                 <option value="">Sélectionner</option>
                 <option value="recolte">Récolte</option>
@@ -1049,6 +1034,7 @@ function FormulaireCharges() {
                   Transformation huile
                 </option>
               </select>
+              {errors.typeCharge && <p className="mt-1 text-xs text-red-600">{errors.typeCharge}</p>}
             </div>
 
             {/* Sous-type */}
@@ -1057,20 +1043,21 @@ function FormulaireCharges() {
               sousTypesDisponibles.length > 0 && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    Sous-type
+                    Sous-type <span className="text-red-500">*</span>
                   </label>
                   <select
                     value={sousType}
                     onChange={(e) => {
                       const val = e.target.value
                       setSousType(val)
+                      setErrors(prev => ({ ...prev, sousType: "" }))
                       if (val === "achat_equipement" && equipementId && !editingId) {
                         const eq = equipements.find((eq) => String(eq.id) === String(equipementId))
                         if (eq && eq.prix_achat != null) setMontantDt(String(eq.prix_achat))
                       }
                     }}
-                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-olive-500 focus:ring-olive-500"
-                    required
+                    onBlur={() => { if (!sousType) setErrors(prev => ({ ...prev, sousType: "Le sous-type est obligatoire" })) }}
+                    className={`mt-1 block w-full rounded-md border px-3 py-2 text-sm shadow-sm focus:ring-1 ${errors.sousType ? "border-red-300 focus:border-red-500 focus:ring-red-500" : "border-gray-300 focus:border-olive-500 focus:ring-olive-500"}`}
                   >
                     <option value="">Sélectionner</option>
                     {sousTypesDisponibles.map((st) => (
@@ -1079,22 +1066,27 @@ function FormulaireCharges() {
                       </option>
                     ))}
                   </select>
+                  {errors.sousType && <p className="mt-1 text-xs text-red-600">{errors.sousType}</p>}
                 </div>
               )}
 
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Montant total (DT)
+                Montant total (DT) <span className="text-red-500">*</span>
               </label>
               <input
                 type="number"
                 min="0"
                 step="0.01"
                 value={montantDt}
-                onChange={(e) => setMontantDt(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-olive-500 focus:ring-olive-500"
-                required
+                onChange={(e) => { setMontantDt(e.target.value); setErrors(prev => ({ ...prev, montantDt: "" })) }}
+                onBlur={() => {
+                  if (!montantDt) setErrors(prev => ({ ...prev, montantDt: "Le montant est obligatoire" }))
+                  else if (parseFloat(montantDt) <= 0) setErrors(prev => ({ ...prev, montantDt: "Le montant doit être positif" }))
+                }}
+                className={`mt-1 block w-full rounded-md border px-3 py-2 text-sm shadow-sm focus:ring-1 ${errors.montantDt ? "border-red-300 focus:border-red-500 focus:ring-red-500" : "border-gray-300 focus:border-olive-500 focus:ring-olive-500"}`}
               />
+              {errors.montantDt && <p className="mt-1 text-xs text-red-600">{errors.montantDt}</p>}
             </div>
 
             {typeCharge === "recolte" && (
@@ -1128,19 +1120,23 @@ function FormulaireCharges() {
                     exploitation.
                   </div>
                 ) : (
-                  <SearchableSelect
-                    value={equipementId}
-                    onChange={(val) => {
-                      setEquipementId(val)
-                      if (sousType === "achat_equipement" && val && !editingId) {
-                        const eq = equipements.find((eq) => String(eq.id) === String(val))
-                        if (eq && eq.prix_achat != null) setMontantDt(String(eq.prix_achat))
-                      }
-                    }}
-                    options={[{ value: "", label: "Sélectionner un équipement" }, ...equipements.map(eq => ({ value: eq.id, label: eq.nom }))]}
-                    placeholder="Sélectionner un équipement"
-                    className="mt-1 block w-full"
-                  />
+                  <>
+                    <SearchableSelect
+                      value={equipementId}
+                      onChange={(val) => {
+                        setEquipementId(val)
+                        setErrors(prev => ({ ...prev, equipementId: "" }))
+                        if (sousType === "achat_equipement" && val && !editingId) {
+                          const eq = equipements.find((eq) => String(eq.id) === String(val))
+                          if (eq && eq.prix_achat != null) setMontantDt(String(eq.prix_achat))
+                        }
+                      }}
+                      options={[{ value: "", label: "Sélectionner un équipement" }, ...equipements.map(eq => ({ value: eq.id, label: eq.nom }))]}
+                      placeholder="Sélectionner un équipement"
+                      className="mt-1 block w-full"
+                    />
+                    {errors.equipementId && <p className="mt-1 text-xs text-red-600">{errors.equipementId}</p>}
+                  </>
                 )}
               </div>
             )}

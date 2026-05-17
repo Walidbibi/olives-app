@@ -1011,22 +1011,21 @@ function Resume({ onNavigateTracteur }) {
               <button
                 type="button"
                 onClick={() => setDetailCaVue("annee")}
-                className={`px-3 py-1 rounded-md ${
-                  detailCaVue === "annee"
-                    ? "bg-white text-gray-900 shadow-sm"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
+                className={`px-3 py-1 rounded-md ${detailCaVue === "annee" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
               >
                 Par Campagne
               </button>
               <button
                 type="button"
+                onClick={() => setDetailCaVue("source")}
+                className={`px-3 py-1 rounded-md ${detailCaVue === "source" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+              >
+                Par source de revenus
+              </button>
+              <button
+                type="button"
                 onClick={() => setDetailCaVue("parcelle")}
-                className={`px-3 py-1 rounded-md ${
-                  detailCaVue === "parcelle"
-                    ? "bg-white text-gray-900 shadow-sm"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
+                className={`px-3 py-1 rounded-md ${detailCaVue === "parcelle" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
               >
                 Par parcelle
               </button>
@@ -1105,68 +1104,82 @@ function Resume({ onNavigateTracteur }) {
                 )}
               </tbody>
             </table>
-          ) : (
-            <table className="min-w-full divide-y divide-gray-200 text-sm">
-              <thead className="bg-gray-50 sticky top-0">
-                <tr>
-                  <th className="px-3 py-2 text-left font-medium text-gray-600">
-                    Parcelle
-                  </th>
-                  <th className="px-3 py-2 text-right font-medium text-gray-600">
-                    CA (DT)
-                  </th>
-                  <th className="px-3 py-2 text-right font-medium text-gray-600">
-                    Part
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 bg-white">
-                {caParParcelleTrie.length === 0 ? (
+          ) : campagneFiltreId === "all" && detailCaVue === "source" ? (() => {
+            const caVentesTotal = rawVentes.reduce((sum, v) => sum + (parseFloat(v.montant_total_dt) || 0), 0)
+            const autresMap = new Map()
+            rawAutresRevenus.forEach((r) => {
+              const label = labelTypeRevenu(r.type_revenu)
+              autresMap.set(label, (autresMap.get(label) || 0) + (parseFloat(r.montant_dt) || 0))
+            })
+            const lignes = []
+            if (caVentesTotal > 0) lignes.push({ source: "Ventes d'olives", ca: caVentesTotal })
+            autresMap.forEach((ca, source) => { if (ca > 0) lignes.push({ source, ca }) })
+            lignes.sort((a, b) => b.ca - a.ca)
+            return (
+              <table className="min-w-full divide-y divide-gray-200 text-sm">
+                <thead className="bg-gray-50 sticky top-0">
                   <tr>
-                    <td
-                      colSpan={3}
-                      className="px-3 py-3 text-center text-gray-500"
-                    >
-                      Aucune vente liée à une parcelle.
-                    </td>
+                    <th className="px-3 py-2 text-left font-medium text-gray-600">Source de revenus</th>
+                    <th className="px-3 py-2 text-right font-medium text-gray-600">CA (DT)</th>
+                    <th className="px-3 py-2 text-right font-medium text-gray-600">Part</th>
                   </tr>
-                ) : (
-                  caParParcelleTrie.map((ligne, idx) => {
-                    const part =
-                      kpi.ca > 0 ? (ligne.ca / kpi.ca) * 100 : 0
-                    return (
-                      <tr key={idx}>
-                        <td className="px-3 py-2 text-gray-800">
-                          {ligne.parcelleNom}
-                        </td>
-                        <td className="px-3 py-2 text-right text-gray-800">
-                          {formatMontant(ligne.ca)}
-                        </td>
-                        <td className="px-3 py-2 text-right text-gray-800">
-                          {kpi.ca > 0
-                            ? `${part.toFixed(1)} %`
-                            : "-"}
-                        </td>
-                      </tr>
-                    )
-                  })
-                )}
-                {caParParcelleTrie.length > 0 && (
-                  <tr className="bg-gray-50 font-semibold">
-                    <td className="px-3 py-2 text-gray-900">
-                      Total
-                    </td>
-                    <td className="px-3 py-2 text-right text-gray-900">
-                      {formatMontant(kpi.ca)}
-                    </td>
-                    <td className="px-3 py-2 text-right text-gray-900">
-                      {kpi.ca > 0 ? "100.0 %" : "-"}
-                    </td>
+                </thead>
+                <tbody className="divide-y divide-gray-100 bg-white">
+                  {lignes.length === 0 ? (
+                    <tr><td colSpan={3} className="px-3 py-3 text-center text-gray-500">Aucun revenu enregistré.</td></tr>
+                  ) : lignes.map((ligne, idx) => (
+                    <tr key={idx}>
+                      <td className="px-3 py-2 text-gray-800">{ligne.source}</td>
+                      <td className="px-3 py-2 text-right text-gray-800">{formatMontant(ligne.ca)}</td>
+                      <td className="px-3 py-2 text-right text-gray-800">
+                        {kpi.ca > 0 ? `${((ligne.ca / kpi.ca) * 100).toFixed(1)} %` : "—"}
+                      </td>
+                    </tr>
+                  ))}
+                  {lignes.length > 0 && (
+                    <tr className="bg-gray-50 font-semibold">
+                      <td className="px-3 py-2 text-gray-900">Total</td>
+                      <td className="px-3 py-2 text-right text-gray-900">{formatMontant(kpi.ca)}</td>
+                      <td className="px-3 py-2 text-right text-gray-900">100.0 %</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            )
+          })() : (() => {
+            const totalCaParc = caParParcelleTrie.reduce((sum, l) => sum + l.ca, 0)
+            return (
+              <table className="min-w-full divide-y divide-gray-200 text-sm">
+                <thead className="bg-gray-50 sticky top-0">
+                  <tr>
+                    <th className="px-3 py-2 text-left font-medium text-gray-600">Parcelle</th>
+                    <th className="px-3 py-2 text-right font-medium text-gray-600">CA (DT)</th>
+                    <th className="px-3 py-2 text-right font-medium text-gray-600">Part</th>
                   </tr>
-                )}
-              </tbody>
-            </table>
-          )}
+                </thead>
+                <tbody className="divide-y divide-gray-100 bg-white">
+                  {caParParcelleTrie.length === 0 ? (
+                    <tr><td colSpan={3} className="px-3 py-3 text-center text-gray-500">Aucune vente liée à une parcelle.</td></tr>
+                  ) : caParParcelleTrie.map((ligne, idx) => (
+                    <tr key={idx}>
+                      <td className="px-3 py-2 text-gray-800">{ligne.parcelleNom}</td>
+                      <td className="px-3 py-2 text-right text-gray-800">{formatMontant(ligne.ca)}</td>
+                      <td className="px-3 py-2 text-right text-gray-800">
+                        {totalCaParc > 0 ? `${((ligne.ca / totalCaParc) * 100).toFixed(1)} %` : "—"}
+                      </td>
+                    </tr>
+                  ))}
+                  {caParParcelleTrie.length > 0 && (
+                    <tr className="bg-gray-50 font-semibold">
+                      <td className="px-3 py-2 text-gray-900">Total</td>
+                      <td className="px-3 py-2 text-right text-gray-900">{formatMontant(totalCaParc)}</td>
+                      <td className="px-3 py-2 text-right text-gray-900">100.0 %</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            )
+          })()}
         </div>
       </Modal>
 

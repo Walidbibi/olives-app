@@ -46,6 +46,7 @@ function FormulaireRecolte({ onDemanderVente }) {
 
   const [formError, setFormError] = useState("")
   const [editError, setEditError] = useState("")
+  const [errors, setErrors] = useState({})
 
   const [recolteDoublon, setRecolteDoublon] = useState(null)
   const [doublonChoiceVisible, setDoublonChoiceVisible] = useState(false)
@@ -277,6 +278,7 @@ function FormulaireRecolte({ onDemanderVente }) {
     setMessageType("info")
     setFormError("")
     setEditError("")
+    setErrors({})
     setRecolteDoublon(null)
     setDoublonChoiceVisible(false)
     setIsSubmitting(false)
@@ -311,6 +313,7 @@ function FormulaireRecolte({ onDemanderVente }) {
     setMessageType("info")
     setFormError("")
     setEditError("")
+    setErrors({})
     setRecolteDoublon(null)
     setDoublonChoiceVisible(false)
     setIsSubmitting(false)
@@ -395,8 +398,13 @@ function FormulaireRecolte({ onDemanderVente }) {
         setFormError("Veuillez sélectionner une campagne.")
         return
       }
-      if (!dateRecolte || !parcelleId || !quantiteKg) {
-        setFormError("Date, parcelle et quantité sont obligatoires.")
+      const newErrors = {}
+      if (!dateRecolte) newErrors.dateRecolte = "La date est obligatoire"
+      if (!parcelleId) newErrors.parcelleId = "La parcelle est obligatoire"
+      if (!quantiteKg) newErrors.quantiteKg = "La quantité est obligatoire"
+      else if (Number(quantiteKg) <= 0) newErrors.quantiteKg = "La quantité doit être positive"
+      if (Object.keys(newErrors).length > 0) {
+        setErrors(newErrors)
         return
       }
 
@@ -1187,30 +1195,32 @@ function FormulaireRecolte({ onDemanderVente }) {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Date de récolte
+                Date de récolte <span className="text-red-500">*</span>
               </label>
               <input
                 type="date"
                 value={dateRecolte || ""}
-                onChange={(e) => setDateRecolte(e.target.value)}
-                className="mt-1 block w-full h-10 rounded-md border border-gray-300 px-3 text-sm shadow-sm focus:border-olive-500 focus:ring-olive-500 disabled:bg-gray-50 disabled:text-gray-500"
-                required
+                onChange={(e) => { setDateRecolte(e.target.value); setErrors(prev => ({ ...prev, dateRecolte: "" })) }}
+                onBlur={() => { if (!dateRecolte) setErrors(prev => ({ ...prev, dateRecolte: "La date est obligatoire" })) }}
+                className={`mt-1 block w-full h-10 rounded-md border px-3 text-sm shadow-sm focus:ring-1 disabled:bg-gray-50 disabled:text-gray-500 ${errors.dateRecolte ? "border-red-300 focus:border-red-500 focus:ring-red-500" : "border-gray-300 focus:border-olive-500 focus:ring-olive-500"}`}
                 disabled={editingEstVendu}
               />
+              {errors.dateRecolte && <p className="mt-1 text-xs text-red-600">{errors.dateRecolte}</p>}
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Parcelle
+                Parcelle <span className="text-red-500">*</span>
               </label>
               <SearchableSelect
                 value={parcelleId}
-                onChange={setParcelleId}
+                onChange={(val) => { setParcelleId(val); setErrors(prev => ({ ...prev, parcelleId: "" })) }}
                 options={[{ value: "", label: "Sélectionner une parcelle" }, ...parcelles.map(p => ({ value: p.id, label: p.nom }))]}
                 placeholder="Sélectionner une parcelle"
                 disabled={editingEstVendu}
                 className="mt-1 block w-full"
               />
+              {errors.parcelleId && <p className="mt-1 text-xs text-red-600">{errors.parcelleId}</p>}
             </div>
 
             <div>
@@ -1231,17 +1241,21 @@ function FormulaireRecolte({ onDemanderVente }) {
 
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Quantité (kg)
+                Quantité (kg) <span className="text-red-500">*</span>
               </label>
               <input
                 type="number"
                 min="0"
                 step="0.1"
                 value={quantiteKg}
-                onChange={(e) => setQuantiteKg(e.target.value)}
-                className="mt-1 block w-full h-10 rounded-md border border-gray-300 px-3 text-sm shadow-sm focus:border-olive-500 focus:ring-olive-500"
-                required
+                onChange={(e) => { setQuantiteKg(e.target.value); setErrors(prev => ({ ...prev, quantiteKg: "" })) }}
+                onBlur={() => {
+                  if (!quantiteKg) setErrors(prev => ({ ...prev, quantiteKg: "La quantité est obligatoire" }))
+                  else if (Number(quantiteKg) <= 0) setErrors(prev => ({ ...prev, quantiteKg: "La quantité doit être positive" }))
+                }}
+                className={`mt-1 block w-full h-10 rounded-md border px-3 text-sm shadow-sm focus:ring-1 ${errors.quantiteKg ? "border-red-300 focus:border-red-500 focus:ring-red-500" : "border-gray-300 focus:border-olive-500 focus:ring-olive-500"}`}
               />
+              {errors.quantiteKg && <p className="mt-1 text-xs text-red-600">{errors.quantiteKg}</p>}
             </div>
 
             <div>
@@ -1279,7 +1293,7 @@ function FormulaireRecolte({ onDemanderVente }) {
             {destination !== "vente_brut" && (
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Quantité d&apos;huile (L)
+                  Quantité d&apos;huile (L){destination === "huile_perso" && <span className="text-red-500 ml-1">*</span>}
                 </label>
                 <input
                   type="number"
@@ -1288,7 +1302,8 @@ function FormulaireRecolte({ onDemanderVente }) {
                   value={quantiteL}
                   onChange={(e) => setQuantiteL(e.target.value)}
                   className="mt-1 block w-full h-10 rounded-md border border-gray-300 px-3 text-sm shadow-sm focus:border-olive-500 focus:ring-olive-500 disabled:bg-gray-50 disabled:text-gray-500"
-                  placeholder="Optionnel"
+                  placeholder={destination === "huile_perso" ? "Obligatoire" : "Optionnel"}
+                  required={destination === "huile_perso"}
                   disabled={editingEstVendu}
                 />
               </div>

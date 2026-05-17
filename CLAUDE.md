@@ -46,6 +46,8 @@ resume | campagnes | recolte | ventes | charges
 - don → "Dons"
 - vehicule → "Autres charges véhicules"
 - equipement → "Équipements"
+- traitement_oliviers → "Traitement oliviers" — à implémenter (décidé session 2026-05-16)
+  - Sous-types : engrais/fertilisation, labour, taille, salaire laboureurs, autre (préciser)
 
 ## Commands
 - Install dependencies:
@@ -76,7 +78,7 @@ Revue complète effectuée. Liste priorisée à implémenter lors des prochaines
 
 ### HAUTE priorité (bloquant pour l'usage mobile)
 - [x] **Tables → cards sur mobile** : Les tableaux Récolte, Ventes, Charges nécessitent un scroll horizontal sur téléphone. Basculer vers une vue en cartes sur petit écran (<768px). ✅ Fait en session 2026-05-10 — tableau masqué sur mobile (hidden md:block), cartes affichées (md:hidden) avec layout date/infos/quantité/actions.
-- [ ] **Validation temps réel des formulaires** : Les erreurs n'apparaissent qu'au submit. Ajouter validation pendant la saisie.
+- [x] **Validation temps réel des formulaires** : Les erreurs n'apparaissent qu'au submit. Ajouter validation pendant la saisie. ✅ Fait en session 2026-05-17 — `errors` state object dans les 4 formulaires, `onBlur` sur chaque champ obligatoire, `onChange` efface l'erreur, message rouge inline sous le champ + bordure rouge.
 - [x] **Messages de chargement spécifiques** : Remplacer "Chargement..." par des messages précis ("Chargement des récoltes..."). Afficher une erreur visible si la requête échoue (pas de spinner infini). ✅ Fait en session 2026-05-10 — messages précis dans tous les formulaires + DashboardTracteur, bouton Réessayer sur l'écran d'erreur global.
 - [x] **Selects filtrables** : Les listes déroulantes (équipements, parcelles) ne sont pas recherchables. Ajouter un champ de recherche/autocomplete. ✅ Fait en session 2026-05-10 — composant SearchableSelect réutilisable, appliqué sur 5 selects (parcelles × 3, équipements × 2).
 - [ ] **Fil d'Ariane dans la navigation imbriquée** : Quand l'utilisateur est dans Profil > Équipements > Dashboard Tracteur, aucun repère visuel. Ajouter un breadcrumb.
@@ -102,7 +104,9 @@ Idées issues d'une réflexion terrain (point de vue agriculteur). À prioriser 
 - [ ] **Stock d'huile** : Suivi des litres produits après pressage, vendus et restants. Nouveau module avec formulaire + tableau + KPIs.
 - [ ] **Bons du moulin (maâsra)** : Enregistrer les bons de livraison au moulin — taux d'humidité, taux de matière grasse, rendement en huile, date. Lier à une campagne.
 - [ ] **Main d'œuvre nominative** : Saisir les ouvriers par nom avec nombre de jours travaillés et montant payé, plutôt qu'un coût global. Permettre de retrouver les bons ouvriers d'une saison à l'autre.
-- [ ] **Carnet de traitements phytosanitaires** : Enregistrer chaque traitement (produit, dose, parcelle, date). Historique consultable par parcelle et par campagne. ⚠️ EN ATTENTE — à confirmer avec ton père (vérifie s'il fait des traitements sur l'oliveraie).
+- ~~**Carnet de traitements phytosanitaires**~~ : ❌ Abandonné — le père ne fait pas de traitement chimique (uniquement taille, labour, engrais). Pas de DAR ni de retreatment à suivre. Confirmé session 2026-05-16.
+- [ ] **Timeline rétroactive par campagne** (session 2026-05-16) : Vue chronologique dans l'onglet Campagnes — tout ce qui s'est passé pendant une campagne affiché sur une ligne de temps : récoltes (kg, parcelle), ventes (montant, acheteur), charges (type, montant), traitements (labour, taille, engrais). Données existantes suffisent, aucune modification DB requise. Affichage possible en feed vertical trié par date ou en mini-calendrier mensuel. Utile pour comprendre d'un coup d'œil le déroulé d'une saison.
+- [ ] **Onglet Traitement** (session 2026-05-16) : Journal d'actions terrain — enregistrer ce qui a été fait, quand, et sur quelle parcelle (taille, labour, engrais, autre). Entité distincte des charges : une entrée = date + parcelle + action + notes optionnelles. Les coûts associés (salaire laboureurs, achat engrais) restent dans l'onglet Charges avec le type `traitement_oliviers`, sans lien direct entre les deux. ✅ Création table `traitements` validée (session 2026-05-16). Schéma : `id` (uuid PK), `campagne_id` (FK → campagne), `parcelle_id` (FK → parcelles), `date` (date), `type_action` (text : taille / labour / engrais / autre), `notes` (text nullable), `created_at` (timestamptz).
 - [ ] **Tableau de rentabilité** : Vue synthétique — recettes vs charges par hectare, par arbre, par campagne. Basé sur les données existantes.
 - [ ] **Alertes calendrier agricole** (détail session 2026-05-09) : Bannières dans le Résumé aux moments clés de la saison oléicole tunisienne. Calendrier pré-configuré : taille (jan-fév), débourrement (mars), floraison (avr-mai), surveillance mouche (juin-août), véraison (sept-oct), récolte (oct-nov), bilan (déc). Alertes déclenchées aussi par les données de l'app (DAR, retreatment, charges manquantes). Configurable : activer/désactiver, décaler les dates, ajouter alertes personnalisées. Pas de nouvelle table Supabase requise (calendrier en dur + localStorage). ✅ Validé par l'utilisateur.
 - [ ] **Planning de taille** (détail session 2026-05-09) : Organiser le travail de taille hivernal. Vue calendrier par semaine (janvier-mars), assignation parcelle + équipe + type de taille (fructification, rajeunissement, sanitaire, formation). Suivi prévu vs réalisé avec coût estimé vs coût réel. Bilan de fin de saison. Nécessite une table `planning_taille` en base Supabase (accord requis). ✅ Validé par l'utilisateur.
@@ -113,7 +117,7 @@ Idées issues d'une réflexion terrain (point de vue agriculteur). À prioriser 
 
 ### Nécessite modification de la base de données (accord explicite requis)
 - [ ] **Fiche par arbre** : Créer une table `arbres` en base. Chaque arbre lié à une parcelle, avec variété, âge, historique de rendement, état sanitaire. Visualisation sur carte Leaflet.
-- [ ] **Carnet de traitements phytosanitaires** (détail session 2026-05-09) : Nécessite une table `traitements` en base. Champs : campagne_id, parcelle_nom, produit, cible (ravageur), dose, unité, surface_ha, date_traitement, delai_retreatment (jours), DAR (délai avant récolte), opérateur, notes. Ravageurs pré-configurés : Mouche de l'olive (Bactrocera oleae), Teigne (Prays oleae), Œil de paon (Spilocaea oleagina), Cochenille noire (Saissetia oleae), Verticilliose. Fonctions : alertes retreatment automatiques, alerte DAR avant récolte, historique par parcelle/campagne, coût total intrants. ⚠️ EN ATTENTE accord DB + confirmation terrain avec ton père.
+- ~~**Carnet de traitements phytosanitaires**~~ : ❌ Abandonné — pas de traitement chimique sur cette exploitation. Confirmé session 2026-05-16.
 
 ### Vision produit — Stratégie commerciale (session 2026-05-09)
 Une seule app, un seul codebase. Deux niveaux d'accès :
@@ -203,6 +207,12 @@ Ces fonctionnalités sont trop avancées pour l'exploitation familiale actuelle 
 - [ ] **Main d'œuvre nominative** : Ouvriers par nom, jours travaillés, montant payé.
 - [ ] **Fiche par arbre** : Table `arbres` en base, visualisation Leaflet.
 
+### Pratiques terrain confirmées (session 2026-05-16)
+Le père fait principalement : **taille** (hivernale), **labour** (inter-rangs), **engrais** (pas de produits chimiques). Pas de traitements phytosanitaires, pas de DAR à gérer. Cela oriente les priorités :
+- Planning de taille ✅ très pertinent
+- Suivi engrais (produit, date, parcelle, coût) → à considérer comme extension légère des charges
+- Carnet phytosanitaire ❌ hors périmètre pour cette exploitation
+
 ### Notes d'implémentation
 - Priorité actuelle : fonctionnalités validées pour l'exploitation familiale (alertes calendrier, planning taille).
 - Chaque nouvelle fonctionnalité = nouvel onglet ou sous-section dans ProfilExploitation selon la complexité.
@@ -245,7 +255,7 @@ Données de récolte au survol déjà implémentées (tooltip live depuis Supaba
 - [x] **`ProfilExploitation.jsx` — Parsing GPS fragile** : Faux positif — `parseGPS` normalise virgule/point décimal.
 - [x] **`Resume.jsx` — Filtre tracteur incorrect** : Faux positif — label et filtre cohérents ("Tracteurs").
 - [x] **`FormulaireRecolte.jsx` — Mutation d'état après unmount** : Faux positif — React 18/19 ignore silencieusement les updates sur composants démontés.
-- [ ] **`FormulaireVente.jsx` — Double round-trip Supabase inutile** : Réel (perf uniquement, pas de crash) — à optimiser plus tard.
+- [x] **`FormulaireVente.jsx` — Double round-trip Supabase inutile** : Corrigé — après une nouvelle vente, le SELECT de rafraîchissement remplacé par un filtre local `prev.filter(r => r.id !== recolteId)`.
 - [x] **`SearchableSelect.jsx` — Prop `disabled` ignorée** : Faux positif — `disabled` bien câblé (ligne 49).
 
 ### MINEURS

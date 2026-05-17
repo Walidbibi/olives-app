@@ -45,6 +45,7 @@ function FormulaireVente({ recoltePourVente, clearRecoltePourVente }) {
 
   const [message, setMessage] = useState("")
   const [messageType, setMessageType] = useState("info")
+  const [errors, setErrors] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const [pageCourante, setPageCourante] = useState(1)
@@ -297,6 +298,7 @@ function FormulaireVente({ recoltePourVente, clearRecoltePourVente }) {
     setEditingId(null)
     setMessage("")
     setMessageType("info")
+    setErrors({})
     setIsSubmitting(false)
   }
 
@@ -436,14 +438,13 @@ function FormulaireVente({ recoltePourVente, clearRecoltePourVente }) {
         setMessage("Veuillez sélectionner une campagne")
         return
       }
-      if (!recolteId) {
-        setMessageType("error")
-        setMessage("Veuillez sélectionner une récolte à vendre")
-        return
-      }
-      if (!dateVente || !prixKg) {
-        setMessageType("error")
-        setMessage("Date de vente et prix au kg sont obligatoires")
+      const newErrors = {}
+      if (!recolteId) newErrors.recolteId = "Veuillez sélectionner une récolte"
+      if (!dateVente) newErrors.dateVente = "La date de vente est obligatoire"
+      if (!prixKg) newErrors.prixKg = "Le prix au kg est obligatoire"
+      else if (parseFloat(prixKg) <= 0) newErrors.prixKg = "Le prix doit être positif"
+      if (Object.keys(newErrors).length > 0) {
+        setErrors(newErrors)
         return
       }
 
@@ -531,15 +532,9 @@ function FormulaireVente({ recoltePourVente, clearRecoltePourVente }) {
         }
       }
 
-      const { data: recoltesVendablesData } = await supabase
-        .from("recolte_journaliere")
-        .select("id, campagne_id, date, quantite_kg, type_olive, destination, est_vendu, parcelle_id")
-        .eq("campagne_id", campagneId)
-        .eq("destination", "vente_brut")
-        .eq("est_vendu", false)
-        .order("date", { ascending: true })
-
-      setRecoltesVendables(recoltesVendablesData || [])
+      if (!editingId) {
+        setRecoltesVendables(prev => prev.filter(r => String(r.id) !== String(recolteId)))
+      }
       setRefreshKey((k) => k + 1)
       if (!editingId) setPageCourante(1)
       setMessageType("success")
@@ -1193,11 +1188,12 @@ function FormulaireVente({ recoltePourVente, clearRecoltePourVente }) {
                   vendue, soit destination différente).
                 </p>
               ) : (
+                <>
                 <select
                   value={recolteId}
-                  onChange={(e) => setRecolteId(e.target.value)}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-olive-500 focus:ring-olive-500"
-                  required
+                  onChange={(e) => { setRecolteId(e.target.value); setErrors(prev => ({ ...prev, recolteId: "" })) }}
+                  onBlur={() => { if (!recolteId) setErrors(prev => ({ ...prev, recolteId: "Veuillez sélectionner une récolte" })) }}
+                  className={`mt-1 block w-full rounded-md border px-3 py-2 text-sm shadow-sm focus:ring-1 ${errors.recolteId ? "border-red-300 focus:border-red-500 focus:ring-red-500" : "border-gray-300 focus:border-olive-500 focus:ring-olive-500"}`}
                   disabled={!!editingId}
                 >
                   <option value="">Sélectionner une récolte</option>
@@ -1228,36 +1224,43 @@ function FormulaireVente({ recoltePourVente, clearRecoltePourVente }) {
                       )
                     })()}
                 </select>
+                {errors.recolteId && <p className="mt-1 text-xs text-red-600">{errors.recolteId}</p>}
+                </>
               )}
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Date de vente
+                Date de vente <span className="text-red-500">*</span>
               </label>
               <input
                 type="date"
                 value={dateVente || ""}
-                onChange={(e) => setDateVente(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-olive-500 focus:ring-olive-500"
-                required
+                onChange={(e) => { setDateVente(e.target.value); setErrors(prev => ({ ...prev, dateVente: "" })) }}
+                onBlur={() => { if (!dateVente) setErrors(prev => ({ ...prev, dateVente: "La date de vente est obligatoire" })) }}
+                className={`mt-1 block w-full rounded-md border px-3 py-2 text-sm shadow-sm focus:ring-1 ${errors.dateVente ? "border-red-300 focus:border-red-500 focus:ring-red-500" : "border-gray-300 focus:border-olive-500 focus:ring-olive-500"}`}
                 disabled={!!editingId}
               />
+              {errors.dateVente && <p className="mt-1 text-xs text-red-600">{errors.dateVente}</p>}
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Prix au kg (DT)
+                Prix au kg (DT) <span className="text-red-500">*</span>
               </label>
               <input
                 type="number"
                 min="0"
                 step="0.001"
                 value={prixKg}
-                onChange={(e) => setPrixKg(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-olive-500 focus:ring-olive-500"
-                required
+                onChange={(e) => { setPrixKg(e.target.value); setErrors(prev => ({ ...prev, prixKg: "" })) }}
+                onBlur={() => {
+                  if (!prixKg) setErrors(prev => ({ ...prev, prixKg: "Le prix au kg est obligatoire" }))
+                  else if (parseFloat(prixKg) <= 0) setErrors(prev => ({ ...prev, prixKg: "Le prix doit être positif" }))
+                }}
+                className={`mt-1 block w-full rounded-md border px-3 py-2 text-sm shadow-sm focus:ring-1 ${errors.prixKg ? "border-red-300 focus:border-red-500 focus:ring-red-500" : "border-gray-300 focus:border-olive-500 focus:ring-olive-500"}`}
               />
+              {errors.prixKg && <p className="mt-1 text-xs text-red-600">{errors.prixKg}</p>}
             </div>
 
             <div>
