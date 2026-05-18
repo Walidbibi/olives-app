@@ -29,6 +29,10 @@ const SOUS_TYPES_PAR_TYPE = {
     { value: "cadeau", label: "Cadeau" },
     { value: "autre_don", label: "Autre (préciser)" },
   ],
+  traitement: [
+    { value: "salaire_ouvrier", label: "Salaire ouvrier" },
+    { value: "achat_engrais", label: "Achat engrais" },
+  ],
   transformation_huile: [],
 }
 
@@ -433,6 +437,8 @@ function FormulaireCharges() {
         return "Équipement"
       case "don":
         return "Don"
+      case "traitement":
+        return "Traitement"
       case "transformation_huile":
         return "Transformation huile"
       default:
@@ -734,9 +740,8 @@ function FormulaireCharges() {
                 <option value="recolte">Récolte</option>
                 <option value="equipement">Équipement</option>
                 <option value="don">Don</option>
-                <option value="transformation_huile">
-                  Transformation huile
-                </option>
+                <option value="traitement">Traitement</option>
+                <option value="transformation_huile">Transformation huile</option>
               </select>
             </div>
 
@@ -1027,9 +1032,8 @@ function FormulaireCharges() {
                 <option value="recolte">Récolte</option>
                 <option value="equipement">Équipement</option>
                 <option value="don">Don</option>
-                <option value="transformation_huile">
-                  Transformation huile
-                </option>
+                <option value="traitement">Traitement</option>
+                <option value="transformation_huile">Transformation huile</option>
               </select>
               {errors.typeCharge && <p className="mt-1 text-xs text-red-600">{errors.typeCharge}</p>}
             </div>

@@ -45,7 +45,7 @@ resume | campagnes | recolte | ventes | charges | traitements | carte
 - Badges couleur par parcelle (index-based : bleu, amber, vert, violet, rose)
 - Notes obligatoire si type = "autre"
 - Table `traitements` en Supabase : `campagne_id`, `parcelle_id`, `date`, `type_action`, `notes`
-- ⚠️ **Reste à faire** : ajouter le type de charge `traitement_oliviers` dans `FormulaireCharges.jsx` (décidé session 2026-05-16, non implémenté). Sous-types : engrais/fertilisation, labour, taille, salaire laboureurs, autre (préciser).
+- ✅ Type de charge `traitement` ajouté (session 2026-05-18). Sous-types : Salaire ouvrier, Achat engrais.
 
 ### Types de charges (clés en base Supabase)
 - main_oeuvre → "Main d'oeuvre"
@@ -54,8 +54,8 @@ resume | campagnes | recolte | ventes | charges | traitements | carte
 - don → "Dons"
 - vehicule → "Autres charges véhicules"
 - equipement → "Équipements"
-- traitement_oliviers → "Traitement oliviers" — à implémenter (décidé session 2026-05-16)
-  - Sous-types : engrais/fertilisation, labour, taille, salaire laboureurs, autre (préciser)
+- traitement → "Traitement" ✅ implémenté session 2026-05-18
+  - Sous-types : salaire_ouvrier, achat_engrais
 
 ## Commands
 - Install dependencies:

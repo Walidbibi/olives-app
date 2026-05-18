@@ -24,6 +24,7 @@ function Resume({ onNavigateTracteur }) {
       recolte: 0,
       equipement: 0,
       don: 0,
+      traitement: 0,
       transformation_huile: 0,
     },
     recolteParType: [],
@@ -56,6 +57,7 @@ function Resume({ onNavigateTracteur }) {
   const [detailChargesVue, setDetailChargesVue] = useState("campagne")
   const [vueRentabilite, setVueRentabilite] = useState(false)
   const [drilldown, setDrilldown] = useState(null)
+  const [kgDrilldownAnnee, setKgDrilldownAnnee] = useState(null)
   const [rawVentes, setRawVentes] = useState([])
   const [rawCharges, setRawCharges] = useState([])
   const [rawAutresRevenus, setRawAutresRevenus] = useState([])
@@ -146,6 +148,7 @@ function Resume({ onNavigateTracteur }) {
         recolte: 0,
         equipement: 0,
         don: 0,
+        traitement: 0,
         transformation_huile: 0,
       }
 
@@ -162,6 +165,7 @@ function Resume({ onNavigateTracteur }) {
       const autresCharges =
         chargesParType.equipement +
         chargesParType.don +
+        chargesParType.traitement +
         chargesParType.transformation_huile
 
       const chargesTotales = charges.reduce(
@@ -565,6 +569,52 @@ function Resume({ onNavigateTracteur }) {
     [kpi.huilePersoParParcelle]
   )
 
+  const recolteKgParCampagne = useMemo(
+    () => [...kpi.recolteParAnnee].sort((a, b) => String(a.annee).localeCompare(String(b.annee))),
+    [kpi.recolteParAnnee]
+  )
+
+  const { recolteParParcelleParAnnee, parcellesRecolte } = useMemo(() => {
+    const COLORS = ["#3b82f6","#f59e0b","#22c55e","#8b5cf6","#f43f5e","#06b6d4","#84cc16","#fb923c","#e879f9","#2dd4bf"]
+    const parcellesSet = new Set()
+    const mapAnnee = new Map()
+    for (const r of kpi.recolteParAnneeParParcelleType) {
+      const { annee, parcelleNom, quantite } = r
+      if (!annee) continue
+      parcellesSet.add(parcelleNom)
+      if (!mapAnnee.has(annee)) mapAnnee.set(annee, { annee })
+      const entry = mapAnnee.get(annee)
+      entry[parcelleNom] = (entry[parcelleNom] || 0) + quantite
+    }
+    const parcellesRecolte = Array.from(parcellesSet).map((nom, idx) => ({
+      nom,
+      fill: COLORS[idx % COLORS.length],
+    }))
+    const recolteParParcelleParAnnee = Array.from(mapAnnee.values()).sort((a, b) =>
+      String(a.annee).localeCompare(String(b.annee))
+    )
+    return { recolteParParcelleParAnnee, parcellesRecolte }
+  }, [kpi.recolteParAnneeParParcelleType])
+
+  const kgParParcelleDrilldown = useMemo(() => {
+    if (!kgDrilldownAnnee) return []
+    const COLORS = ["#3b82f6","#f59e0b","#22c55e","#8b5cf6","#f43f5e","#06b6d4","#84cc16","#fb923c","#e879f9","#2dd4bf"]
+    const map = new Map()
+    for (const r of kpi.recolteParAnneeParParcelleType) {
+      if (String(r.annee) !== String(kgDrilldownAnnee)) continue
+      map.set(r.parcelleNom, (map.get(r.parcelleNom) || 0) + r.quantite)
+    }
+    const total = Array.from(map.values()).reduce((s, v) => s + v, 0)
+    return Array.from(map.entries())
+      .sort((a, b) => b[1] - a[1])
+      .map(([nom, value], idx) => ({
+        name: nom,
+        value,
+        pct: total > 0 ? ((value / total) * 100).toFixed(1) : "0",
+        fill: COLORS[idx % COLORS.length],
+      }))
+  }, [kgDrilldownAnnee, kpi.recolteParAnneeParParcelleType])
+
   const chargesParCampagneTrie = useMemo(
     () =>
       [...kpi.chargesParCampagne].sort((a, b) =>
@@ -744,6 +794,8 @@ function Resume({ onNavigateTracteur }) {
         return "Équipements"
       case "don":
         return "Dons"
+      case "traitement":
+        return "Traitement"
       case "transformation_huile":
         return "Transformation huile"
       default:
@@ -898,7 +950,7 @@ function Resume({ onNavigateTracteur }) {
           {/* Graphique */}
           {margeParCampagneTrie.length > 0 && (
             <div className="rounded-xl bg-white p-4 shadow">
-              <p className="mb-4 font-semibold text-gray-700">Évolution par campagne</p>
+              <p className="mb-4 font-semibold text-gray-700">Évolution par campagne <span className="text-xs font-normal text-gray-400">(cliquer CA ou Charges pour détail)</span></p>
               <ResponsiveContainer width="100%" height={280}>
                 <BarChart data={margeParCampagneTrie} margin={{ top: 4, right: 16, left: 0, bottom: 4 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -947,43 +999,6 @@ function Resume({ onNavigateTracteur }) {
             </div>
           )}
 
-          {/* Drill-down camembert */}
-          {drilldown && drilldownData.length > 0 && (
-            <div className="rounded-xl bg-white p-4 shadow">
-              <div className="flex items-center justify-between mb-4">
-                <p className="font-semibold text-gray-700">
-                  {drilldown.type === "ca" ? "CA" : "Charges"} {drilldown.annee} — Répartition
-                </p>
-                <button type="button" onClick={() => setDrilldown(null)} className="text-sm text-gray-400 hover:text-gray-600">✕ Fermer</button>
-              </div>
-              <div className="flex flex-col md:flex-row items-center gap-6">
-                <ResponsiveContainer width="100%" height={240}>
-                  <PieChart>
-                    <Pie
-                      data={drilldownData}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={90}
-                      label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)} %)`}
-                      labelLine={true}
-                    >
-                      {drilldownData.map((_, i) => (
-                        <Cell key={i} fill={
-                          drilldown.type === "ca"
-                            ? ["#3b82f6", "#60a5fa", "#1d4ed8", "#93c5fd", "#2563eb"][i % 5]
-                            : ["#f59e0b", "#ef4444", "#6b7280", "#8b5cf6", "#22c55e", "#ec4899"][i % 6]
-                        } />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(v) => v.toLocaleString("fr-FR", { minimumFractionDigits: 3, maximumFractionDigits: 3 }) + " DT"} />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          )}
 
           {/* Graphique résultat net + marge % */}
           {margeParCampagneTrie.length > 0 && (
@@ -1045,6 +1060,24 @@ function Resume({ onNavigateTracteur }) {
             </div>
           )}
 
+          {/* Kg récoltés par campagne */}
+          {recolteKgParCampagne.length > 0 && (
+            <div className="rounded-xl bg-white p-4 shadow">
+              <p className="mb-4 font-semibold text-gray-700">Kg récoltés par campagne <span className="text-xs font-normal text-gray-400">(cliquer pour détail par parcelle)</span></p>
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart data={recolteKgParCampagne} margin={{ top: 4, right: 16, left: 0, bottom: 4 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis dataKey="annee" tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => v.toLocaleString("fr-FR")} />
+                  <Tooltip formatter={(v) => [v.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " kg", "Récolte"]} />
+                  <Bar dataKey="quantite" name="Récolte" fill="#22c55e" radius={[4, 4, 0, 0]} cursor="pointer"
+                    onClick={(d) => setKgDrilldownAnnee(d.annee)}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+
           </div>{/* fin grille 2x2 */}
 
           {/* CA vente brute par campagne + camembert par parcelle — pleine largeur */}
@@ -1098,6 +1131,67 @@ function Resume({ onNavigateTracteur }) {
           </div>
         </div>
       )}
+
+      {/* Modal drilldown — Évolution par campagne (CA ou Charges) */}
+      <Modal isOpen={!!drilldown && drilldownData.length > 0} onClose={() => setDrilldown(null)} title={drilldown ? `${drilldown.type === "ca" ? "CA" : "Charges"} ${drilldown.annee} — Répartition` : ""} size="large">
+        <div className="flex flex-col md:flex-row items-center gap-6">
+          <ResponsiveContainer width="100%" height={260}>
+            <PieChart>
+              <Pie data={drilldownData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={55} outerRadius={100}>
+                {drilldownData.map((_, i) => (
+                  <Cell key={i} fill={
+                    drilldown?.type === "ca"
+                      ? ["#3b82f6","#60a5fa","#1d4ed8","#93c5fd","#2563eb"][i % 5]
+                      : ["#f59e0b","#ef4444","#6b7280","#8b5cf6","#22c55e","#ec4899"][i % 6]
+                  } />
+                ))}
+              </Pie>
+              <Tooltip formatter={(v) => v.toLocaleString("fr-FR", { minimumFractionDigits: 3, maximumFractionDigits: 3 }) + " DT"} />
+            </PieChart>
+          </ResponsiveContainer>
+          <div className="flex flex-col gap-1.5 min-w-max">
+            {drilldownData.map((entry, i) => {
+              const total = drilldownData.reduce((s, d) => s + d.value, 0)
+              const pct = total > 0 ? ((entry.value / total) * 100).toFixed(1) : "0"
+              const fill = drilldown?.type === "ca"
+                ? ["#3b82f6","#60a5fa","#1d4ed8","#93c5fd","#2563eb"][i % 5]
+                : ["#f59e0b","#ef4444","#6b7280","#8b5cf6","#22c55e","#ec4899"][i % 6]
+              return (
+                <div key={i} className="flex items-center gap-2 text-sm">
+                  <span className="inline-block w-3 h-3 rounded-sm flex-shrink-0" style={{ backgroundColor: fill }} />
+                  <span className="text-gray-700 font-medium">{entry.name}</span>
+                  <span className="text-gray-500">{pct}%</span>
+                  <span className="text-gray-400 text-xs">{entry.value.toLocaleString("fr-FR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })} DT</span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </Modal>
+
+      {/* Modal drilldown — Kg récoltés par parcelle */}
+      <Modal isOpen={!!kgDrilldownAnnee} onClose={() => setKgDrilldownAnnee(null)} title={kgDrilldownAnnee ? `Récolte ${kgDrilldownAnnee} — Répartition par parcelle` : ""} size="large">
+        <div className="flex flex-col md:flex-row items-center gap-6">
+          <ResponsiveContainer width="100%" height={260}>
+            <PieChart>
+              <Pie data={kgParParcelleDrilldown} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={55} outerRadius={100}>
+                {kgParParcelleDrilldown.map((entry, idx) => <Cell key={idx} fill={entry.fill} />)}
+              </Pie>
+              <Tooltip formatter={(v, name, props) => [`${v.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg (${props.payload.pct}%)`, props.payload.name]} />
+            </PieChart>
+          </ResponsiveContainer>
+          <div className="flex flex-col gap-1.5 min-w-max">
+            {kgParParcelleDrilldown.map((entry, idx) => (
+              <div key={idx} className="flex items-center gap-2 text-sm">
+                <span className="inline-block w-3 h-3 rounded-sm flex-shrink-0" style={{ backgroundColor: entry.fill }} />
+                <span className="text-gray-700 font-medium">{entry.name}</span>
+                <span className="text-gray-500">{entry.pct}%</span>
+                <span className="text-gray-400 text-xs">{entry.value.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Modal>
 
       {/* Modale — Chiffre d'affaires */}
       <Modal
