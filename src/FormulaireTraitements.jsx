@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { supabase } from "./supabase"
+import { useAppData } from "./DataProvider"
 import Modal from "./Modal"
 import Spinner from "./Spinner"
 import Notification from "./Notification"
@@ -21,6 +22,7 @@ function SortIcon({ sortKey, col, sortDir }) {
 }
 
 function FormulaireTraitements() {
+  const { refetch } = useAppData()
   const [campagnes, setCampagnes] = useState([])
   const [campagneId, setCampagneId] = useState("")
   const [loadingCampagnes, setLoadingCampagnes] = useState(true)
@@ -193,6 +195,7 @@ function FormulaireTraitements() {
     }
 
     setRefreshKey(k => k + 1)
+    refetch()
     if (!editingId) setPageCourante(1)
     setMessageType("success")
     setMessage(editingId ? "Traitement mis à jour" : "Traitement enregistré")
@@ -214,6 +217,7 @@ function FormulaireTraitements() {
       const nouvellesPages = Math.ceil(itemsRestants / ITEMS_PAR_PAGE)
       setPageCourante(Math.min(pageCourante, Math.max(1, nouvellesPages)))
       setRefreshKey(k => k + 1)
+      refetch()
       setMessageType("success")
       setMessage("Traitement supprimé")
     }

@@ -1,5 +1,6 @@
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useAppData } from "./DataProvider"
+import { useNotifications } from "./useNotifications"
 import FormulaireCampagne from "./FormulaireCampagne"
 import FormulaireRecolte from "./FormulaireRecolte"
 import FormulaireVente from "./FormulaireVente"
@@ -24,7 +25,28 @@ const onglets = [
 ]
 
 function App() {
-  const { loading: globalLoading, error: globalError, refetch } = useAppData()
+  const { loading: globalLoading, error: globalError, refetch, data } = useAppData()
+
+  const notifications = useNotifications({
+    campagnes: data?.campagnes ?? [],
+    recoltes: data?.recoltes ?? [],
+    charges: data?.charges ?? [],
+    equipements: data?.equipements ?? [],
+  })
+  const hasUrgent = notifications.some(n => n.level === "urgent")
+  const [notifOpen, setNotifOpen] = useState(false)
+  const notifRef = useRef(null)
+
+  useEffect(() => {
+    if (!notifOpen) return
+    function handleClick(e) {
+      if (notifRef.current && !notifRef.current.contains(e.target)) {
+        setNotifOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClick)
+    return () => document.removeEventListener("mousedown", handleClick)
+  }, [notifOpen])
 
   const [ongletActif, setOngletActif] = useState("resume")
   const [ongletPrecedent, setOngletPrecedent] = useState("resume")
@@ -99,15 +121,58 @@ function App() {
             </p>
           </div>
 
-          {/* Bouton Mon profil */}
-          <button
-            type="button"
-            onClick={() => setOngletActif("profil")}
-            className="inline-flex items-center gap-2 rounded-full bg-olive-600 px-3 py-1.5 text-xs sm:text-sm font-medium text-white shadow hover:bg-olive-500 focus:outline-none focus:ring-2 focus:ring-olive-300"
-          >
-            <span>👤</span>
-            <span>Mon profil</span>
-          </button>
+          <div className="flex items-center gap-2">
+            {/* Cloche notifications */}
+            <div className="relative" ref={notifRef}>
+              <button
+                type="button"
+                onClick={() => setNotifOpen(o => !o)}
+                className="relative inline-flex items-center justify-center w-9 h-9 rounded-full bg-olive-600 hover:bg-olive-500 focus:outline-none focus:ring-2 focus:ring-olive-300"
+                aria-label="Notifications"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                {notifications.length > 0 && (
+                  <span className={`absolute -top-1 -right-1 inline-flex items-center justify-center min-w-4.5 h-4.5 px-1 rounded-full text-xs font-bold text-white ${hasUrgent ? "bg-red-500" : "bg-blue-500"}`}>
+                    {notifications.length}
+                  </span>
+                )}
+              </button>
+
+              {/* Panneau notifications */}
+              {notifOpen && (
+                <div className="absolute right-0 mt-2 w-80 rounded-xl bg-white shadow-xl border border-gray-200 z-200">
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+                    <p className="text-sm font-semibold text-gray-800">Notifications</p>
+                    <button type="button" onClick={() => setNotifOpen(false)} className="text-gray-400 hover:text-gray-600 text-lg leading-none">✕</button>
+                  </div>
+                  {notifications.length === 0 ? (
+                    <p className="px-4 py-6 text-sm text-gray-500 text-center">Aucune notification</p>
+                  ) : (
+                    <ul className="divide-y divide-gray-50 max-h-96 overflow-y-auto">
+                      {notifications.map(n => (
+                        <li key={n.id} className="flex items-start gap-3 px-4 py-3">
+                          <span className={`mt-0.5 shrink-0 w-2.5 h-2.5 rounded-full ${n.level === "urgent" ? "bg-red-500" : "bg-blue-500"}`} />
+                          <p className="text-sm text-gray-700 leading-snug">{n.message}</p>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Bouton Mon profil */}
+            <button
+              type="button"
+              onClick={() => setOngletActif("profil")}
+              className="inline-flex items-center gap-2 rounded-full bg-olive-600 px-3 py-1.5 text-xs sm:text-sm font-medium text-white shadow hover:bg-olive-500 focus:outline-none focus:ring-2 focus:ring-olive-300"
+            >
+              <span>👤</span>
+              <span>Mon profil</span>
+            </button>
+          </div>
         </div>
       </header>
 

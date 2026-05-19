@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react"
 import { supabase } from "./supabase"
+import { useAppData } from "./DataProvider"
 import Modal from "./Modal"
 import Spinner from "./Spinner"
 import Notification from "./Notification"
 
 function FormulaireCampagne() {
+  const { refetch } = useAppData()
   const [campagnes, setCampagnes] = useState([])
   const [loadingCampagnes, setLoadingCampagnes] = useState(true)
 
@@ -133,6 +135,7 @@ function FormulaireCampagne() {
       }
 
       await loadCampagnes()
+      refetch()
 
       setMessageType("success")
       setMessage(
@@ -204,6 +207,7 @@ function FormulaireCampagne() {
       }
 
       await loadCampagnes()
+      refetch()
 
       setMessageType("success")
       setMessage(

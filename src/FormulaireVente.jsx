@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { supabase } from "./supabase"
+import { useAppData } from "./DataProvider"
 import Modal from "./Modal"
 import Spinner from "./Spinner"
 import { formatDate } from "./dateUtils"
@@ -22,6 +23,7 @@ function Tag({ text, onRemove }) {
 }
 
 function FormulaireVente({ recoltePourVente, clearRecoltePourVente }) {
+  const { refetch } = useAppData()
   const [campagnes, setCampagnes] = useState([])
   const [campagneId, setCampagneId] = useState("")
   const [ventes, setVentes] = useState([])
@@ -514,6 +516,7 @@ function FormulaireVente({ recoltePourVente, clearRecoltePourVente }) {
         setRecoltesVendables(prev => prev.filter(r => String(r.id) !== String(recolteId)))
       }
       setRefreshKey((k) => k + 1)
+      refetch()
       if (!editingId) setPageCourante(1)
       setMessageType("success")
       setMessage(
@@ -586,6 +589,7 @@ function FormulaireVente({ recoltePourVente, clearRecoltePourVente }) {
       const nouvellesPages = Math.ceil(itemsRestants / ITEMS_PAR_PAGE)
       setPageCourante(Math.min(pageCourante, Math.max(1, nouvellesPages)))
       setRefreshKey((k) => k + 1)
+      refetch()
       setMessageType("success")
       setMessage("Vente annulée et récolte remise disponible")
       setDeleteVenteModalOpen(false)

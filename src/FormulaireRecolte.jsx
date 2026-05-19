@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { supabase } from "./supabase"
+import { useAppData } from "./DataProvider"
 import Modal from "./Modal"
 import Spinner from "./Spinner"
 import { formatDate } from "./dateUtils"
@@ -22,6 +23,7 @@ function Tag({ text, onRemove }) {
 }
 
 function FormulaireRecolte({ onDemanderVente }) {
+  const { refetch } = useAppData()
   const [campagnes, setCampagnes] = useState([])
   const [campagneId, setCampagneId] = useState("")
   const [recoltes, setRecoltes] = useState([])
@@ -446,6 +448,7 @@ function FormulaireRecolte({ onDemanderVente }) {
 
         setPageCourante(pageCourante)
         setRefreshKey((k) => k + 1)
+        refetch()
         setMessageType("success")
         setMessage("Récolte et vente mises à jour avec succès")
         setModalOuvert(false)
@@ -543,6 +546,7 @@ function FormulaireRecolte({ onDemanderVente }) {
 
       setPageCourante(targetPage)
       setRefreshKey((k) => k + 1)
+      refetch()
       setMessageType("success")
       setMessage("Récolte enregistrée avec succès")
       setModalOuvert(false)
@@ -614,6 +618,7 @@ function FormulaireRecolte({ onDemanderVente }) {
       const nouvellesPages = Math.ceil(itemsRestants / ITEMS_PAR_PAGE)
       setPageCourante(Math.min(pageCourante, Math.max(1, nouvellesPages)))
       setRefreshKey((k) => k + 1)
+      refetch()
 
       setMessageType("success")
       setMessage(

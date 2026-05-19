@@ -12,6 +12,7 @@ export function DataProvider({ children }) {
     charges: [],
     campagnes: [],
     parcelles: [],
+    equipements: [],
   })
 
   async function loadAllData() {
@@ -24,20 +25,22 @@ export function DataProvider({ children }) {
         { data: charges = [], error: chargesError },
         { data: campagnes = [], error: campagnesError },
         { data: parcelles = [], error: parcellesError },
+        { data: equipements = [], error: equipementsError },
       ] = await Promise.all([
         supabase
           .from("vente")
-          .select("id, recolte_id, montant_total_dt, campagne_id, quantite_kg"),
+          .select("id, recolte_id, montant_total_dt, campagne_id, quantite_kg, prix_kg_dt"),
         supabase
           .from("recolte_journaliere")
           .select(
-            "id, quantite_kg, parcelle_id, type_olive, campagne_id, date"
+            "id, quantite_kg, parcelle_id, type_olive, campagne_id, date, est_vendu, destination"
           ),
         supabase
           .from("charge")
-          .select("montant_dt, type_charge, campagne_id"),
-        supabase.from("campagne").select("id, annee"),
+          .select("montant_dt, type_charge, sous_type, campagne_id, beneficiaire, date, equipement_id"),
+        supabase.from("campagne").select("id, annee, statut"),
         supabase.from("parcelles").select("id, nom, latitude, longitude"),
+        supabase.from("equipements").select("id, nom"),
       ])
 
       const firstError =
@@ -45,13 +48,14 @@ export function DataProvider({ children }) {
         recoltesError ||
         chargesError ||
         campagnesError ||
-        parcellesError
+        parcellesError ||
+        equipementsError
 
       if (firstError) {
         throw firstError
       }
 
-      if (!ventes || !recoltes || !charges || !campagnes || !parcelles) {
+      if (!ventes || !recoltes || !charges || !campagnes || !parcelles || !equipements) {
         throw new Error("Données reçues nulles depuis Supabase")
       }
 
@@ -61,6 +65,7 @@ export function DataProvider({ children }) {
         charges,
         campagnes,
         parcelles,
+        equipements,
       })
     } catch (err) {
       console.error("Erreur loadAllData:", err)

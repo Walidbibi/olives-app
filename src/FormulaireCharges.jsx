@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import { supabase } from "./supabase"
+import { useAppData } from "./DataProvider"
 import Modal from "./Modal"
 import Spinner from "./Spinner"
 import Notification from "./Notification"
@@ -54,6 +55,7 @@ function Tag({ text, onRemove }) {
 const PAGE_SIZE = 10
 
 function FormulaireCharges() {
+  const { refetch } = useAppData()
   const [campagnes, setCampagnes] = useState([])
   const [campagneId, setCampagneId] = useState("")
   const [charges, setCharges] = useState([])
@@ -390,6 +392,7 @@ function FormulaireCharges() {
     }
 
     await reloadCharges()
+    refetch()
     setMessageType("success")
     setMessage(
       editingId
@@ -420,6 +423,7 @@ function FormulaireCharges() {
       setMessage("Erreur lors de la suppression de la charge.")
     } else {
       await reloadCharges()
+      refetch()
       setMessageType("success")
       setMessage("Charge supprimée avec succès")
     }
@@ -1038,6 +1042,42 @@ function FormulaireCharges() {
               {errors.typeCharge && <p className="mt-1 text-xs text-red-600">{errors.typeCharge}</p>}
             </div>
 
+            {typeCharge === "equipement" && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Équipement
+                </label>
+                {loadingEquipements ? (
+                  <div className="mt-1 text-sm text-gray-500">
+                    Chargement des équipements...
+                  </div>
+                ) : equipements.length === 0 ? (
+                  <div className="mt-1 text-sm text-red-500">
+                    Aucun équipement enregistré. Ajoutez-les dans le profil
+                    exploitation.
+                  </div>
+                ) : (
+                  <>
+                    <SearchableSelect
+                      value={equipementId}
+                      onChange={(val) => {
+                        setEquipementId(val)
+                        setErrors(prev => ({ ...prev, equipementId: "" }))
+                        if (sousType === "achat_equipement" && val && !editingId) {
+                          const eq = equipements.find((eq) => String(eq.id) === String(val))
+                          if (eq && eq.prix_achat != null) setMontantDt(String(eq.prix_achat))
+                        }
+                      }}
+                      options={[{ value: "", label: "Sélectionner un équipement" }, ...equipements.map(eq => ({ value: eq.id, label: eq.nom }))]}
+                      placeholder="Sélectionner un équipement"
+                      className="mt-1 block w-full"
+                    />
+                    {errors.equipementId && <p className="mt-1 text-xs text-red-600">{errors.equipementId}</p>}
+                  </>
+                )}
+              </div>
+            )}
+
             {/* Sous-type */}
             {typeCharge &&
               typeCharge !== "transformation_huile" &&
@@ -1103,42 +1143,6 @@ function FormulaireCharges() {
                   className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-olive-500 focus:ring-olive-500"
                   placeholder="Ex: 5"
                 />
-              </div>
-            )}
-
-            {typeCharge === "equipement" && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Équipement
-                </label>
-                {loadingEquipements ? (
-                  <div className="mt-1 text-sm text-gray-500">
-                    Chargement des équipements...
-                  </div>
-                ) : equipements.length === 0 ? (
-                  <div className="mt-1 text-sm text-red-500">
-                    Aucun équipement enregistré. Ajoutez-les dans le profil
-                    exploitation.
-                  </div>
-                ) : (
-                  <>
-                    <SearchableSelect
-                      value={equipementId}
-                      onChange={(val) => {
-                        setEquipementId(val)
-                        setErrors(prev => ({ ...prev, equipementId: "" }))
-                        if (sousType === "achat_equipement" && val && !editingId) {
-                          const eq = equipements.find((eq) => String(eq.id) === String(val))
-                          if (eq && eq.prix_achat != null) setMontantDt(String(eq.prix_achat))
-                        }
-                      }}
-                      options={[{ value: "", label: "Sélectionner un équipement" }, ...equipements.map(eq => ({ value: eq.id, label: eq.nom }))]}
-                      placeholder="Sélectionner un équipement"
-                      className="mt-1 block w-full"
-                    />
-                    {errors.equipementId && <p className="mt-1 text-xs text-red-600">{errors.equipementId}</p>}
-                  </>
-                )}
               </div>
             )}
 
