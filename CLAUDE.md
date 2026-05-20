@@ -81,29 +81,44 @@ resume | campagnes | recolte | ventes | charges | traitements | carte
 - Prioritize reliability and clarity over cleverness.
 - Avoid unnecessary refactoring.
 
-## UX/UI — Améliorations identifiées (session 2026-05-09)
-Revue complète effectuée. Liste priorisée à implémenter lors des prochaines sessions.
+## UX/UI — Améliorations identifiées (session 2026-05-09, audit approfondi 2026-05-19)
+Persona cible : Said, agriculteur, téléphone en main dans les champs, parfois les mains sales, sous le soleil. Vitesse et lisibilité avant tout.
 
-### HAUTE priorité (bloquant pour l'usage mobile)
-- [x] **Tables → cards sur mobile** : Les tableaux Récolte, Ventes, Charges nécessitent un scroll horizontal sur téléphone. Basculer vers une vue en cartes sur petit écran (<768px). ✅ Fait en session 2026-05-10 — tableau masqué sur mobile (hidden md:block), cartes affichées (md:hidden) avec layout date/infos/quantité/actions.
-- [x] **Validation temps réel des formulaires** : Les erreurs n'apparaissent qu'au submit. Ajouter validation pendant la saisie. ✅ Fait en session 2026-05-17 — `errors` state object dans les 4 formulaires, `onBlur` sur chaque champ obligatoire, `onChange` efface l'erreur, message rouge inline sous le champ + bordure rouge.
-- [x] **Messages de chargement spécifiques** : Remplacer "Chargement..." par des messages précis ("Chargement des récoltes..."). Afficher une erreur visible si la requête échoue (pas de spinner infini). ✅ Fait en session 2026-05-10 — messages précis dans tous les formulaires + DashboardTracteur, bouton Réessayer sur l'écran d'erreur global.
-- [x] **Selects filtrables** : Les listes déroulantes (équipements, parcelles) ne sont pas recherchables. Ajouter un champ de recherche/autocomplete. ✅ Fait en session 2026-05-10 — composant SearchableSelect réutilisable, appliqué sur 5 selects (parcelles × 3, équipements × 2).
-- [ ] **Fil d'Ariane dans la navigation imbriquée** : Quand l'utilisateur est dans Profil > Équipements > Dashboard Tracteur, aucun repère visuel. Ajouter un breadcrumb.
+### Navigation — Points à travailler (session 2026-05-19)
+- [ ] **Menu "Mon exploitation" — multi-tracteurs** : Si plusieurs tracteurs, le menu affiche une seule entrée "Dashboard Tracteur" qui sélectionne toujours le premier. À remplacer par une entrée par tracteur (généré dynamiquement depuis `data.equipements` filtré par `type === "Tracteur"`), chacune naviguant directement vers le dashboard du tracteur concerné.
 
-### MOYENNE priorité (qualité au quotidien)
-- [x] **Tri des colonnes de tableau** : Permettre de cliquer sur les en-têtes pour trier (Récolte, Ventes, Charges). ✅ Fait en session 2026-05-10 — tri serveur (Supabase .order()) sur Récolte et Ventes, tri serveur sur Charges après migration pagination.
-- [ ] **États vides unifiés** : Certaines sections affichent "Aucune donnée...", d'autres un tableau vide, d'autres rien. Créer un composant EmptyState réutilisable.
-- [ ] **Tailles de boutons touch** : Les boutons de pagination sont en dessous du standard tactile 44×44px.
-- [ ] **Accessibilité des modales** : Ajouter aria-modal, aria-labelledby, gestion du focus clavier sur le composant Modal.jsx.
-- [x] **Composant Notification réutilisable** : Les messages de succès/erreur utilisent des styles inline différents partout. Créer un composant partagé. ✅ Fait en session 2026-05-10 — Notification.jsx créé, appliqué dans les 4 formulaires.
+### HAUTE priorité — Friction quotidienne majeure
 
-### BASSE priorité (confort et polish)
-- [ ] **Graphiques dans le Résumé** : Recharts est installé mais pas utilisé dans Resume.jsx. Ajouter courbes d'évolution récolte/ventes.
-- [x] **Durée des notifications** : Les messages de succès disparaissent en 3s — augmenter à 5s ou rendre dismissible manuellement. ✅ Fait en session 2026-05-10 — 6 fichiers passés à 5s.
-- [ ] **Skeleton loaders** : Remplacer le spinner par des placeholders animés pendant le chargement des données.
-- [x] **Précision décimale unifiée** : 2 décimales pour les quantités (kg), 3 pour les montants (DT). Appliquer partout. ✅ Fait en session 2026-05-10 — formatUtils.js créé, Resume.jsx/FormulaireRecolte/Charges/Profil corrigés.
-- [ ] **Composant FilterModal partagé** : Récolte, Ventes et Charges réimplémentent chacun la même logique de filtre. Extraire en composant unique.
+- [x] **Tables → cards sur mobile** ✅ Fait session 2026-05-10
+- [x] **Validation temps réel des formulaires** ✅ Fait session 2026-05-17
+- [x] **Messages de chargement spécifiques** ✅ Fait session 2026-05-10
+- [x] **Selects filtrables** ✅ Fait session 2026-05-10
+- [x] **Contexte campagne global** ✅ Fait session 2026-05-19 — sélecteur unique dans le header vert, partagé entre Résumé / Récolte / Ventes / Charges / Traitements. Auto-sélection campagne en cours au démarrage.
+- [x] **Navigation restructurée** ✅ Fait session 2026-05-19 — 5 onglets principaux (Résumé / Récolte / Ventes / Charges / Traitements) + menu "Mon exploitation" (Profil / Campagnes / Tracteur / Carte / Tableau de rentabilité). `grid-cols-5` sur mobile.
+- [x] **Touch targets sous 44×44px** ✅ Fait session 2026-05-20 — cloche `w-11 h-11` (44px), boutons pagination `py-2.5` (44px), bouton "Mon exploitation" `w-11 h-11` sur mobile / pill sur desktop.
+- [ ] **Vue rapide dans le Résumé** : Le Résumé est conçu pour l'analyse, pas l'usage rapide. Ajouter une section "vue du jour" en haut : 3-4 chiffres clés de la campagne active immédiatement visibles (kg récoltés ce mois, récoltes en attente, dernière vente).
+
+### MOYENNE priorité — Qualité au quotidien
+
+- [x] **Tri des colonnes de tableau** ✅ Fait session 2026-05-10
+- [x] **Composant Notification réutilisable** ✅ Fait session 2026-05-10
+- [ ] **Fil d'Ariane navigation imbriquée** : Profil > Équipements > Dashboard Tracteur sans repère visuel. Ajouter breadcrumb.
+- ~~**États vides unifiés**~~ : ❌ Abandonné — le bouton d'action dans l'EmptyState duplique le bouton déjà présent dans le header de chaque formulaire.
+- [ ] **Tailles de boutons touch** : Pagination en dessous du standard 44×44px.
+- [ ] **Accessibilité des modales** : Ajouter `aria-modal`, `aria-labelledby`, gestion focus clavier.
+- [x] **Footer inutile sur mobile** ✅ Fait session 2026-05-20 — supprimé.
+- [x] **Modales full-screen sur mobile** ✅ Fait session 2026-05-20 — bottom sheet depuis le bas sur mobile, modale centrée avec maxWidth sur desktop. Poignée visuelle ajoutée.
+- [x] **Préservation du contexte de navigation** ✅ Fait session 2026-05-20 — les 5 onglets principaux restent montés en mémoire (`hidden` CSS au lieu de démontage). Filtres, pagination et état local préservés lors des changements d'onglet. Principe UX standard : l'utilisateur retrouve l'état exact dans lequel il a laissé chaque section.
+
+### BASSE priorité — Confort et polish
+
+- [x] **Durée des notifications** ✅ Fait session 2026-05-10
+- [x] **Précision décimale unifiée** ✅ Fait session 2026-05-10
+- [ ] **Skeleton loaders** : Remplacer spinners par placeholders animés.
+- [ ] **Composant FilterModal partagé** : Logique filtre dupliquée dans Récolte, Ventes, Charges, Traitements.
+- [ ] **Confirmation quitter formulaire non sauvegardé** : Pas de dialog si l'utilisateur clique "Annuler" avec un formulaire à moitié rempli — perte silencieuse de saisie.
+- [ ] **`<title>` dynamique** : Le titre du document reste "Olive App" quelle que soit la section ouverte.
+- [ ] **Carte dans nav secondaire** : La Carte est rarement consultée quotidiennement. Envisager de la déplacer en sous-section de Profil ou accessible via le Résumé pour libérer une place dans la nav principale.
 
 ## Nouvelles fonctionnalités métier — Identifiées (session 2026-05-09)
 Idées issues d'une réflexion terrain (point de vue agriculteur). À prioriser et implémenter progressivement.
@@ -119,10 +134,8 @@ Idées issues d'une réflexion terrain (point de vue agriculteur). À prioriser 
   - Comportement identique à Récolte et Ventes : filtre par campagne en haut, pagination, tri, cards mobile
   - Champ `notes` devient obligatoire si `type_action === "autre"`
   - ⚠️ Table `traitements` à créer en Supabase avant l'implémentation
-- [ ] **Tableau de rentabilité** : Vue synthétique — recettes vs charges par hectare, par arbre, par campagne. Basé sur les données existantes.
-- [ ] **Système de notifications** (cloche dans le header, session 2026-05-18) : Icône cloche à côté de "Mon profil", pastille rouge (urgente) ou bleue (info) avec le total. Clic → panneau liste des alertes actives. Pas de dismissable pour l'instant — alerte active tant que la condition est vraie.
-  - **Urgentes 🔴** : plusieurs campagnes en cours simultanément / aucune campagne active / récolte(s) vente_brut non vendues
-  - **Info 🔵** : dons sans bénéficiaire renseigné
+- [x] **Tableau de rentabilité** ✅ Fait sessions 2026-05-18-19 — accessible via "Mon exploitation", grille 2×2 de graphiques (évolution campagnes, prix/kg vs coût/kg, résultat net + marge %, location tracteur), CA vente brute avec drilldown camembert par parcelle, kg récoltés avec drilldown par parcelle.
+- [x] **Système de notifications** ✅ Fait session 2026-05-18-19 — cloche dans le header, pastille rouge/bleue, panneau liste. Alertes : plusieurs campagnes actives / aucune campagne / récoltes non vendues / dons sans bénéficiaire / salaire chauffeur manquant par tracteur (M-1). Refetch live après chaque écriture.
   - ⚠️ **Dismissal des notifications** (à faire avec le chantier multi-utilisateurs) : table Supabase `notification_dismissals` avec `user_id`, `notification_id`, `dismissed_at`. Pas de localStorage — doit fonctionner sur tous les appareils. Les IDs encodent l'occurrence : `salaire_chauffeur_manquant_2026-04`, `recoltes_non_vendues_3`, etc. Si le compteur augmente → nouvel ID → réapparaît même si l'occurrence précédente était fermée.
   - ⚠️ **Alertes calendrier conditionnelles** (à faire plus tard) : jan-fév + aucune taille enregistrée / oct-nov + aucune récolte enregistrée. À croiser avec les données de l'app, pas juste le mois. Pas de bannières automatiques basées uniquement sur le mois.
 - [ ] **Planning de taille** (détail session 2026-05-09) : Organiser le travail de taille hivernal. Vue calendrier par semaine (janvier-mars), assignation parcelle + équipe + type de taille (fructification, rajeunissement, sanitaire, formation). Suivi prévu vs réalisé avec coût estimé vs coût réel. Bilan de fin de saison. Nécessite une table `planning_taille` en base Supabase (accord requis). ✅ Validé par l'utilisateur.

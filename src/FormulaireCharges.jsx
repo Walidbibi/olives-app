@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { supabase } from "./supabase"
 import { useAppData } from "./DataProvider"
+import EmptyState from "./EmptyState"
 import Modal from "./Modal"
 import Spinner from "./Spinner"
 import Notification from "./Notification"
@@ -54,10 +55,8 @@ function Tag({ text, onRemove }) {
 
 const PAGE_SIZE = 10
 
-function FormulaireCharges() {
-  const { refetch } = useAppData()
-  const [campagnes, setCampagnes] = useState([])
-  const [campagneId, setCampagneId] = useState("")
+function FormulaireCharges({ campagneId }) {
+  const { refetch, data: appData } = useAppData()
   const [charges, setCharges] = useState([])
   const [equipements, setEquipements] = useState([])
 
@@ -71,7 +70,6 @@ function FormulaireCharges() {
   const [beneficiaire, setBeneficiaire] = useState("")
   const [equipementId, setEquipementId] = useState("")
 
-  const [loadingCampagnes, setLoadingCampagnes] = useState(true)
   const [loadingCharges, setLoadingCharges] = useState(false)
   const [loadingEquipements, setLoadingEquipements] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -131,33 +129,7 @@ function FormulaireCharges() {
       .join(" ")
   }
 
-  // Campagnes
-  useEffect(() => {
-    async function loadCampagnes() {
-      setLoadingCampagnes(true)
-      const { data, error } = await supabase
-        .from("campagne")
-        .select("*")
-        .order("annee", { ascending: false })
-
-      if (error) {
-        console.error("Erreur chargement campagnes:", error)
-        setMessageType("error")
-        setMessage("Erreur lors du chargement des campagnes")
-      } else {
-        setCampagnes(data || [])
-        if (data && data.length > 0) {
-          setCampagneId(String(data[0].id))
-        } else {
-          setCampagneId("")
-        }
-      }
-      setLoadingCampagnes(false)
-    }
-    loadCampagnes()
-  }, [])
-
-  const campagneSelectionnee = campagnes.find(
+  const campagneSelectionnee = (appData?.campagnes ?? []).find(
     (c) => String(c.id) === String(campagneId)
   )
 
@@ -565,28 +537,7 @@ function FormulaireCharges() {
         </div>
 
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <div>
-            {loadingCampagnes ? (
-              <div className="text-sm text-gray-500">Chargement des campagnes...</div>
-            ) : campagnes.length === 0 ? (
-              <div className="text-sm text-red-500">
-                Aucune campagne disponible.
-              </div>
-            ) : (
-              <select
-                value={campagneId}
-                onChange={(e) => { setCampagneId(e.target.value); setPage(1) }}
-                className="rounded-md border border-gray-300 px-3 py-1.5 text-sm shadow-sm focus:border-olive-500 focus:ring-olive-500"
-              >
-                {campagnes.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    Campagne {c.annee} — {c.statut === "en_cours" ? "En cours" : "Terminée"}
-                  </option>
-                ))}
-              </select>
-            )}
-          </div>
-
+          {(loadingCharges || totalCount > 0 || hasActiveFilters || !campagneId) && (
           <button
             type="button"
             onClick={ouvrirModalCreation}
@@ -595,6 +546,7 @@ function FormulaireCharges() {
           >
             + Ajouter une charge
           </button>
+          )}
         </div>
       </div>
 
@@ -634,7 +586,7 @@ function FormulaireCharges() {
           <button
             type="button"
             onClick={openFiltersModal}
-            className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+            className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
           >
             Filtres
             {hasActiveFilters && (
@@ -648,7 +600,7 @@ function FormulaireCharges() {
             <button
               type="button"
               onClick={handleResetFilters}
-              className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+              className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
             >
               Réinitialiser les filtres
             </button>
@@ -807,9 +759,11 @@ function FormulaireCharges() {
         {loadingCharges ? (
           <Spinner message="Chargement des charges..." />
         ) : totalCount === 0 ? (
-          <p className="text-sm text-gray-500">
-            Aucune charge ne correspond aux filtres pour cette campagne.
-          </p>
+          hasActiveFilters ? (
+            <p className="text-sm text-gray-500">Aucune charge ne correspond aux filtres pour cette campagne.</p>
+          ) : (
+            <EmptyState icon="📉" titre="Aucune charge" sousTitre="Enregistrez votre première charge." action={{ label: "+ Ajouter une charge", onClick: ouvrirModalCreation }} />
+          )
         ) : (
           <>
           {/* Vue cartes — mobile uniquement */}

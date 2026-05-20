@@ -14,14 +14,20 @@ import CarteExploitation from "./CarteExploitation"
 
 const onglets = [
   { id: "resume", label: "Résumé", icon: "📊" },
-  // { id: "dashboard", label: "Dashboard", icon: "📈" },
-  { id: "campagnes", label: "Campagnes", icon: "🌿" },
   { id: "recolte", label: "Récolte", icon: "🫒" },
   { id: "ventes", label: "Ventes", icon: "💰" },
   { id: "charges", label: "Charges", icon: "📉" },
   { id: "traitements", label: "Traitements", icon: "🌱" },
-  { id: "carte", label: "Carte", icon: "🗺️" },
-  // IMPORTANT : pas d'entrée "profil" ici
+]
+
+const ongletsPrincipaux = onglets.map(o => o.id)
+
+const menuExploitation = [
+  { id: "profil", label: "Profil & équipements", icon: "👤" },
+  { id: "campagnes", label: "Gérer les campagnes", icon: "🌿" },
+  { id: "dashboard_tracteur", label: "Dashboard Tracteur", icon: "🚜" },
+  { id: "carte", label: "Carte de l'exploitation", icon: "🗺️" },
+  { id: "rentabilite", label: "Tableau de rentabilité", icon: "📊" },
 ]
 
 function App() {
@@ -36,17 +42,34 @@ function App() {
   const hasUrgent = notifications.some(n => n.level === "urgent")
   const [notifOpen, setNotifOpen] = useState(false)
   const notifRef = useRef(null)
+  const [exploitationOpen, setExploitationOpen] = useState(false)
+  const exploitationRef = useRef(null)
+
+  const [campagneActiveId, setCampagneActiveId] = useState("all")
+
+  useEffect(() => {
+    if (!data?.campagnes?.length || campagneActiveId !== "all") return
+    const enCours = data.campagnes.find(c => c.statut === "en_cours")
+    if (enCours) setCampagneActiveId(String(enCours.id))
+  }, [data?.campagnes])
 
   useEffect(() => {
     if (!notifOpen) return
     function handleClick(e) {
-      if (notifRef.current && !notifRef.current.contains(e.target)) {
-        setNotifOpen(false)
-      }
+      if (notifRef.current && !notifRef.current.contains(e.target)) setNotifOpen(false)
     }
     document.addEventListener("mousedown", handleClick)
     return () => document.removeEventListener("mousedown", handleClick)
   }, [notifOpen])
+
+  useEffect(() => {
+    if (!exploitationOpen) return
+    function handleClick(e) {
+      if (exploitationRef.current && !exploitationRef.current.contains(e.target)) setExploitationOpen(false)
+    }
+    document.addEventListener("mousedown", handleClick)
+    return () => document.removeEventListener("mousedown", handleClick)
+  }, [exploitationOpen])
 
   const [ongletActif, setOngletActif] = useState("resume")
   const [ongletPrecedent, setOngletPrecedent] = useState("resume")
@@ -113,13 +136,26 @@ function App() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-olive-700 text-white shadow-lg">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="text-center sm:text-left">
-            <h1 className="text-2xl font-bold">🫒 Olive App</h1>
-            <p className="text-olive-200 text-sm">
-              Gestion de Récolte d&apos;Oliviers
-            </p>
+        <div className="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center gap-3">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl font-bold">🫒 Olive App</h1>
           </div>
+
+          {/* Sélecteur campagne global */}
+          {(data?.campagnes ?? []).length > 0 && (
+            <select
+              value={campagneActiveId}
+              onChange={e => setCampagneActiveId(e.target.value)}
+              className="rounded-md bg-olive-600 border border-olive-500 text-white px-3 py-1.5 text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-olive-300 cursor-pointer"
+            >
+              <option value="all" className="text-gray-800 bg-white">Toutes les campagnes</option>
+              {[...(data?.campagnes ?? [])].sort((a, b) => a.annee - b.annee).map(c => (
+                <option key={c.id} value={c.id} className="text-gray-800 bg-white">
+                  Campagne {c.annee} — {c.statut === "en_cours" ? "En cours" : "Terminée"}
+                </option>
+              ))}
+            </select>
+          )}
 
           <div className="flex items-center gap-2">
             {/* Cloche notifications */}
@@ -127,7 +163,7 @@ function App() {
               <button
                 type="button"
                 onClick={() => setNotifOpen(o => !o)}
-                className="relative inline-flex items-center justify-center w-9 h-9 rounded-full bg-olive-600 hover:bg-olive-500 focus:outline-none focus:ring-2 focus:ring-olive-300"
+                className="relative inline-flex items-center justify-center w-11 h-11 rounded-full bg-olive-600 hover:bg-olive-500 focus:outline-none focus:ring-2 focus:ring-olive-300"
                 aria-label="Notifications"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -163,23 +199,50 @@ function App() {
               )}
             </div>
 
-            {/* Bouton Mon profil */}
-            <button
-              type="button"
-              onClick={() => setOngletActif("profil")}
-              className="inline-flex items-center gap-2 rounded-full bg-olive-600 px-3 py-1.5 text-xs sm:text-sm font-medium text-white shadow hover:bg-olive-500 focus:outline-none focus:ring-2 focus:ring-olive-300"
-            >
-              <span>👤</span>
-              <span>Mon profil</span>
-            </button>
+            {/* Menu Mon exploitation */}
+            <div className="relative" ref={exploitationRef}>
+              <button
+                type="button"
+                onClick={() => setExploitationOpen(o => !o)}
+                className={`inline-flex items-center justify-center gap-1.5 rounded-full w-11 h-11 sm:w-auto sm:h-auto sm:px-4 sm:py-2.5 text-xs sm:text-sm font-medium shadow focus:outline-none focus:ring-2 focus:ring-olive-300 ${!ongletsPrincipaux.includes(ongletActif) ? "bg-white text-olive-700" : "bg-olive-600 text-white hover:bg-olive-500"}`}
+              >
+                <span>⚙️</span>
+                <span className="hidden sm:inline">Mon exploitation</span>
+              </button>
+
+              {exploitationOpen && (
+                <div className="absolute right-0 mt-2 w-64 rounded-xl bg-white shadow-xl border border-gray-200 z-200 overflow-hidden">
+                  <p className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wide border-b border-gray-100">Mon exploitation</p>
+                  {menuExploitation.map(item => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => {
+                        if (item.id === "dashboard_tracteur") {
+                          const premier = (data?.equipements ?? []).find(e => e.type === "Tracteur") ?? (data?.equipements ?? [])[0]
+                          if (premier) setTracteurSelectionne(premier)
+                          setOngletPrecedent(ongletActif)
+                        }
+                        setOngletActif(item.id)
+                        setExploitationOpen(false)
+                      }}
+                      className={`w-full flex items-center gap-3 px-4 py-3 text-sm text-left hover:bg-olive-50 transition-colors ${ongletActif === item.id ? "bg-olive-50 text-olive-700 font-medium" : "text-gray-700"}`}
+                    >
+                      <span className="text-lg">{item.icon}</span>
+                      <span>{item.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </header>
 
-      {/* Navigation (sans profil) */}
+      {/* Navigation principale */}
       <nav className="bg-white shadow-md sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-2">
-          <div className="grid grid-cols-3 sm:flex sm:flex-row gap-1 py-2">
+          <div className="grid grid-cols-5 sm:flex sm:flex-row gap-1 py-2">
             {onglets.map((o) => (
               <button
                 key={o.id}
@@ -201,36 +264,58 @@ function App() {
 
       {/* Contenu principal */}
       <main className="max-w-6xl mx-auto px-4 py-6">
-        {ongletActif === "resume" && (
+        {/* Onglets principaux — toujours montés pour préserver l'état (filtres, pagination) */}
+        <div className={ongletActif === "resume" ? "" : "hidden"}>
           <Resume
+            campagneId={campagneActiveId}
             onNavigateTracteur={(eq) => {
               setTracteurSelectionne(eq)
               setOngletPrecedent("resume")
               setOngletActif("dashboard_tracteur")
             }}
           />
-        )}
-        {ongletActif === "campagnes" && <FormulaireCampagne />}
+        </div>
 
-        {ongletActif === "recolte" && (
+        <div className={ongletActif === "recolte" ? "" : "hidden"}>
           <FormulaireRecolte
+            campagneId={campagneActiveId}
             onDemanderVente={(recolte) => {
               setRecoltePourVente(recolte)
               setOngletActif("ventes")
             }}
           />
-        )}
+        </div>
 
-        {ongletActif === "ventes" && (
+        <div className={ongletActif === "ventes" ? "" : "hidden"}>
           <FormulaireVente
+            campagneId={campagneActiveId}
             recoltePourVente={recoltePourVente}
             clearRecoltePourVente={() => setRecoltePourVente(null)}
           />
+        </div>
+
+        <div className={ongletActif === "charges" ? "" : "hidden"}>
+          <FormulaireCharges campagneId={campagneActiveId} />
+        </div>
+
+        <div className={ongletActif === "traitements" ? "" : "hidden"}>
+          <FormulaireTraitements campagneId={campagneActiveId} />
+        </div>
+
+        {/* Sections secondaires — montées à la demande */}
+        {ongletActif === "rentabilite" && (
+          <Resume
+            campagneId="all"
+            autoOpenRentabilite={true}
+            onFermerRentabilite={() => setOngletActif("resume")}
+            onNavigateTracteur={(eq) => {
+              setTracteurSelectionne(eq)
+              setOngletPrecedent("rentabilite")
+              setOngletActif("dashboard_tracteur")
+            }}
+          />
         )}
-
-        {ongletActif === "charges" && <FormulaireCharges />}
-
-        {ongletActif === "traitements" && <FormulaireTraitements />}
+        {ongletActif === "campagnes" && <FormulaireCampagne />}
 
         {ongletActif === "carte" && (
           <CarteExploitation
@@ -260,12 +345,6 @@ function App() {
 )}
       </main>
 
-      {/* Footer */}
-      <footer className="bg-gray-800 text-gray-300 text-center py-4 mt-8">
-        <p className="text-sm">Olive App - &copy; 2026</p>
-      </footer>
-      {/* Assistant Panel */}
-      
     </div>
   )
 }

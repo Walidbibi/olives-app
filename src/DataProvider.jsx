@@ -40,7 +40,7 @@ export function DataProvider({ children }) {
           .select("montant_dt, type_charge, sous_type, campagne_id, beneficiaire, date, equipement_id"),
         supabase.from("campagne").select("id, annee, statut"),
         supabase.from("parcelles").select("id, nom, latitude, longitude"),
-        supabase.from("equipements").select("id, nom"),
+        supabase.from("equipements").select("id, nom, type"),
       ])
 
       const firstError =

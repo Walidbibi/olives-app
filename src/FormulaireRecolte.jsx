@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { supabase } from "./supabase"
 import { useAppData } from "./DataProvider"
+import EmptyState from "./EmptyState"
 import Modal from "./Modal"
 import Spinner from "./Spinner"
 import { formatDate } from "./dateUtils"
@@ -22,14 +23,11 @@ function Tag({ text, onRemove }) {
   )
 }
 
-function FormulaireRecolte({ onDemanderVente }) {
-  const { refetch } = useAppData()
-  const [campagnes, setCampagnes] = useState([])
-  const [campagneId, setCampagneId] = useState("")
+function FormulaireRecolte({ onDemanderVente, campagneId }) {
+  const { refetch, data: appData } = useAppData()
   const [recoltes, setRecoltes] = useState([])
   const [parcelles, setParcelles] = useState([])
 
-  const [loadingCampagnes, setLoadingCampagnes] = useState(true)
   const [loadingRecoltes, setLoadingRecoltes] = useState(false)
   const [modalOuvert, setModalOuvert] = useState(false)
   const [editingId, setEditingId] = useState(null)
@@ -98,34 +96,7 @@ function FormulaireRecolte({ onDemanderVente }) {
     return () => clearTimeout(timer)
   }, [message, messageType])
 
-  // Campagnes
-  useEffect(() => {
-    async function loadCampagnes() {
-      setLoadingCampagnes(true)
-      const { data, error } = await supabase
-        .from("campagne")
-        .select("*")
-        .eq("statut", "en_cours")
-        .order("annee", { ascending: false })
-
-      if (error) {
-        console.error("Erreur chargement campagnes:", error)
-        setMessageType("error")
-        setMessage("Erreur lors du chargement des campagnes")
-      } else {
-        setCampagnes(data || [])
-        if (data && data.length > 0) {
-          setCampagneId(String(data[0].id))
-        } else {
-          setCampagneId("")
-        }
-      }
-      setLoadingCampagnes(false)
-    }
-    loadCampagnes()
-  }, [])
-
-  const campagneSelectionnee = campagnes.find(
+  const campagneSelectionnee = (appData?.campagnes ?? []).find(
     (c) => String(c.id) === String(campagneId)
   )
 
@@ -690,34 +661,7 @@ function FormulaireRecolte({ onDemanderVente }) {
         </div>
 
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <div>
-            {loadingCampagnes ? (
-              <div className="flex items-center gap-2 text-sm text-gray-500">
-                <div className="w-4 h-4 border-2 border-gray-200 border-t-blue-500 rounded-full animate-spin" />
-                Chargement des campagnes...
-              </div>
-            ) : campagnes.length === 0 ? (
-              <div className="text-sm text-red-500">
-                Aucune campagne en cours.
-              </div>
-            ) : (
-              <select
-                value={campagneId}
-                onChange={(e) => {
-                  setCampagneId(e.target.value)
-                  setPageCourante(1)
-                }}
-                className="rounded-md border border-gray-300 px-3 py-1.5 text-sm shadow-sm focus:border-olive-500 focus:ring-olive-500"
-              >
-                {campagnes.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    Campagne {c.annee} — {c.statut === "en_cours" ? "En cours" : "Terminée"}
-                  </option>
-                ))}
-              </select>
-            )}
-          </div>
-
+          {(loadingRecoltes || totalCount > 0 || hasActiveFilters || !campagneId) && (
           <button
             type="button"
             onClick={ouvrirModalCreation}
@@ -726,6 +670,7 @@ function FormulaireRecolte({ onDemanderVente }) {
           >
             + Nouvelle récolte
           </button>
+          )}
         </div>
       </div>
 
@@ -764,7 +709,7 @@ function FormulaireRecolte({ onDemanderVente }) {
           <button
             type="button"
             onClick={openFiltersModal}
-            className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+            className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
           >
             Filtres
             {hasActiveFilters && (
@@ -778,7 +723,7 @@ function FormulaireRecolte({ onDemanderVente }) {
             <button
               type="button"
               onClick={handleResetFilters}
-              className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+              className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
             >
               Réinitialiser les filtres
             </button>
@@ -901,9 +846,11 @@ function FormulaireRecolte({ onDemanderVente }) {
         {loadingRecoltes ? (
           <Spinner message="Chargement des récoltes..." />
         ) : totalCount === 0 ? (
-          <p className="text-sm text-gray-500">
-            Aucune récolte ne correspond aux filtres pour cette campagne.
-          </p>
+          hasActiveFilters ? (
+            <p className="text-sm text-gray-500">Aucune récolte ne correspond aux filtres pour cette campagne.</p>
+          ) : (
+            <EmptyState icon="🫒" titre="Aucune récolte" sousTitre="Enregistrez votre première journée de récolte." action={{ label: "+ Nouvelle récolte", onClick: ouvrirModalCreation }} />
+          )
         ) : (
           <>
           {/* Vue cartes — mobile uniquement */}
@@ -1175,7 +1122,7 @@ function FormulaireRecolte({ onDemanderVente }) {
                     setRecolteDoublon(null)
                     setFormError("")
                   }}
-                  className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+                  className="rounded-md border border-gray-300 bg-white px-3 py-2.5 text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-50"
                 >
                   Corriger la nouvelle récolte
                 </button>

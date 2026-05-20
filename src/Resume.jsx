@@ -8,7 +8,7 @@ import {
   ResponsiveContainer, Cell, Legend, PieChart, Pie,
 } from "recharts"
 
-function Resume({ onNavigateTracteur }) {
+function Resume({ onNavigateTracteur, campagneId = "all", autoOpenRentabilite = false, onFermerRentabilite }) {
   const [kpi, setKpi] = useState({
     ca: 0,
     coutMo: 0,
@@ -46,7 +46,7 @@ function Resume({ onNavigateTracteur }) {
   const [equipements, setEquipements] = useState([])
 
   const [campagnes, setCampagnes] = useState([])
-  const [campagneFiltreId, setCampagneFiltreId] = useState("all")
+  const campagneFiltreId = campagneId
 
   const [loading, setLoading] = useState(true)
   const [kpiActif, setKpiActif] = useState(null)
@@ -55,7 +55,23 @@ function Resume({ onNavigateTracteur }) {
   const [detailMargeVue, setDetailMargeVue] = useState("annee")
   const [detailHuilePersoVue, setDetailHuilePersoVue] = useState("annee")
   const [detailChargesVue, setDetailChargesVue] = useState("campagne")
-  const [vueRentabilite, setVueRentabilite] = useState(false)
+  useEffect(() => {
+    if (campagneId !== "all") {
+      setDetailQuantiteVue("parcelle")
+      setDetailCaVue("parcelle")
+      setDetailMargeVue("parcelle")
+      setDetailHuilePersoVue("parcelle")
+      setDetailChargesVue("type")
+    } else {
+      setDetailQuantiteVue("annee")
+      setDetailCaVue("annee")
+      setDetailMargeVue("annee")
+      setDetailHuilePersoVue("annee")
+      setDetailChargesVue("campagne")
+    }
+  }, [campagneId])
+
+  const [vueRentabilite, setVueRentabilite] = useState(autoOpenRentabilite)
   const [drilldown, setDrilldown] = useState(null)
   const [kgDrilldownAnnee, setKgDrilldownAnnee] = useState(null)
   const [rawVentes, setRawVentes] = useState([])
@@ -827,41 +843,6 @@ function Resume({ onNavigateTracteur }) {
           Résumé de la campagne
         </h2>
         <div className="flex flex-wrap items-center gap-3">
-          <div className="text-sm">
-            <label className="mr-2 text-gray-600">Campagne :</label>
-            <select
-              value={campagneFiltreId}
-              onChange={(e) => {
-                const value = e.target.value
-                setCampagneFiltreId(value)
-                if (value !== "all" && detailQuantiteVue === "annee") {
-                  setDetailQuantiteVue("parcelle")
-                }
-                if (value !== "all" && detailCaVue === "annee")
-                  setDetailCaVue("parcelle")
-                if (value !== "all" && detailMargeVue === "annee")
-                  setDetailMargeVue("parcelle")
-                if (value !== "all" && detailHuilePersoVue === "annee")
-                  setDetailHuilePersoVue("parcelle")
-                if (value !== "all")
-                  setDetailChargesVue("type")
-                if (value === "all") {
-                  setDetailCaVue("annee")
-                  setDetailMargeVue("annee")
-                  setDetailHuilePersoVue("annee")
-                  setDetailChargesVue("campagne")
-                }
-              }}
-              className="rounded-md border border-gray-300 px-2 py-1 text-sm shadow-sm focus:border-olive-500 focus:ring-olive-500"
-            >
-              <option value="all">Toutes les campagnes</option>
-              {campagnes.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.annee} – {c.statut === "en_cours" ? "En cours" : "Terminée"}
-                </option>
-              ))}
-            </select>
-          </div>
           <ExportExcel />
         </div>
       </div>
@@ -918,16 +899,6 @@ function Resume({ onNavigateTracteur }) {
         )}
       </div>
 
-      {/* Bouton analyse de rentabilité */}
-      <div className="mt-4 flex justify-end">
-        <button
-          type="button"
-          onClick={() => setVueRentabilite((v) => !v)}
-          className="inline-flex items-center gap-2 rounded-lg border border-green-600 px-4 py-2 text-sm font-semibold text-green-700 hover:bg-green-50 transition-colors"
-        >
-          {vueRentabilite ? "← Retour au résumé" : "📊 Analyse de rentabilité →"}
-        </button>
-      </div>
 
       {/* Vue rentabilité — overlay plein écran */}
       {vueRentabilite && (
@@ -937,10 +908,10 @@ function Resume({ onNavigateTracteur }) {
             <h3 className="text-xl font-bold text-gray-800">Analyse de rentabilité</h3>
             <button
               type="button"
-              onClick={() => setVueRentabilite(false)}
+              onClick={() => { setVueRentabilite(false); onFermerRentabilite?.() }}
               className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100 transition-colors"
             >
-              ← Retour au résumé
+              ← Retour
             </button>
           </div>
 

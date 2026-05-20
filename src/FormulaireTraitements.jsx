@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { supabase } from "./supabase"
 import { useAppData } from "./DataProvider"
+import EmptyState from "./EmptyState"
 import Modal from "./Modal"
 import Spinner from "./Spinner"
 import Notification from "./Notification"
@@ -21,11 +22,8 @@ function SortIcon({ sortKey, col, sortDir }) {
   return <span className="ml-1">{sortDir === "asc" ? "↑" : "↓"}</span>
 }
 
-function FormulaireTraitements() {
+function FormulaireTraitements({ campagneId }) {
   const { refetch } = useAppData()
-  const [campagnes, setCampagnes] = useState([])
-  const [campagneId, setCampagneId] = useState("")
-  const [loadingCampagnes, setLoadingCampagnes] = useState(true)
 
   const [parcelles, setParcelles] = useState([])
 
@@ -76,16 +74,8 @@ function FormulaireTraitements() {
 
   useEffect(() => {
     async function init() {
-      setLoadingCampagnes(true)
-      const [{ data: campagnesData }, { data: parcellesData }] = await Promise.all([
-        supabase.from("campagne").select("*").order("annee", { ascending: false }),
-        supabase.from("parcelles").select("id, nom").order("nom"),
-      ])
-      setCampagnes(campagnesData || [])
+      const { data: parcellesData } = await supabase.from("parcelles").select("id, nom").order("nom")
       setParcelles(parcellesData || [])
-      const enCours = (campagnesData || []).find(c => c.statut === "en_cours")
-      if (enCours) setCampagneId(String(enCours.id))
-      setLoadingCampagnes(false)
     }
     init()
   }, [])
@@ -264,22 +254,7 @@ function FormulaireTraitements() {
           <p className="text-sm text-gray-500">Journal des actions terrain par campagne.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {loadingCampagnes ? (
-            <Spinner message="Chargement..." />
-          ) : (
-            <select
-              value={campagneId}
-              onChange={(e) => { setCampagneId(e.target.value); setPageCourante(1) }}
-              className="rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-olive-500 focus:ring-olive-500"
-            >
-              <option value="">Sélectionner une campagne</option>
-              {campagnes.map(c => (
-                <option key={c.id} value={c.id}>
-                  Campagne {c.annee} — {c.statut === "en_cours" ? "En cours" : "Terminée"}
-                </option>
-              ))}
-            </select>
-          )}
+          {(loadingTraitements || traitements.length > 0 || filtresActifs || !campagneId) && (
           <button
             type="button"
             onClick={ouvrirModalCreation}
@@ -288,6 +263,7 @@ function FormulaireTraitements() {
           >
             + Nouveau traitement
           </button>
+          )}
         </div>
       </div>
 
@@ -312,7 +288,7 @@ function FormulaireTraitements() {
               setTempFiltreTypeAction(filtreTypeAction)
               setFiltersModalOpen(true)
             }}
-            className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+            className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
           >
             Filtres
             {filtresActifs && (
@@ -325,7 +301,7 @@ function FormulaireTraitements() {
             <button
               type="button"
               onClick={() => { setFiltreDateDebut(""); setFiltreDateFin(""); setFiltreParcelleId(""); setFiltreTypeAction(""); setPageCourante(1) }}
-              className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+              className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
             >
               Réinitialiser les filtres
             </button>
@@ -339,9 +315,11 @@ function FormulaireTraitements() {
       ) : loadingTraitements ? (
         <Spinner message="Chargement des traitements..." />
       ) : traitements.length === 0 ? (
-        <p className="text-sm text-gray-500">
-          {filtresActifs ? "Aucun traitement ne correspond aux filtres." : "Aucun traitement enregistré pour cette campagne."}
-        </p>
+        filtresActifs ? (
+          <p className="text-sm text-gray-500">Aucun traitement ne correspond aux filtres.</p>
+        ) : (
+          <EmptyState icon="🌱" titre="Aucun traitement" sousTitre="Enregistrez votre première action terrain." action={{ label: "+ Nouveau traitement", onClick: ouvrirModalCreation }} />
+        )
       ) : (
         <>
           {/* Cards mobile */}
@@ -412,7 +390,7 @@ function FormulaireTraitements() {
                   type="button"
                   onClick={() => setPageCourante(p => Math.max(1, p - 1))}
                   disabled={pageCourante === 1}
-                  className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm disabled:opacity-40 hover:bg-gray-50"
+                  className="rounded-md border border-gray-300 bg-white px-3 py-2.5 text-sm disabled:opacity-40 hover:bg-gray-50"
                 >
                   ← Précédent
                 </button>
@@ -420,7 +398,7 @@ function FormulaireTraitements() {
                   type="button"
                   onClick={() => setPageCourante(p => Math.min(totalPages, p + 1))}
                   disabled={pageCourante === totalPages}
-                  className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm disabled:opacity-40 hover:bg-gray-50"
+                  className="rounded-md border border-gray-300 bg-white px-3 py-2.5 text-sm disabled:opacity-40 hover:bg-gray-50"
                 >
                   Suivant →
                 </button>
