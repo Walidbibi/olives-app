@@ -112,7 +112,7 @@ function FormulaireVente({ recoltePourVente, clearRecoltePourVente, campagneId }
   // Ventes — paginées + filtrées côté serveur, récolte embarquée
   useEffect(() => {
     async function loadVentes() {
-      if (!campagneId) {
+      if (!campagneId || campagneId === "all") {
         setVentes([])
         setTotalCount(0)
         setTotalMontantGlobal(0)
@@ -209,7 +209,7 @@ function FormulaireVente({ recoltePourVente, clearRecoltePourVente, campagneId }
 
   // Récoltes vendables
   useEffect(() => {
-    if (!campagneId) {
+    if (!campagneId || campagneId === "all") {
       setRecoltesVendables([])
       return
     }
@@ -381,7 +381,7 @@ function FormulaireVente({ recoltePourVente, clearRecoltePourVente, campagneId }
     setMessage("")
 
     try {
-      if (!campagneId) {
+      if (!campagneId || campagneId === "all") {
         setMessageType("error")
         setMessage("Veuillez sélectionner une campagne")
         return

@@ -49,7 +49,9 @@ function App() {
 
   useEffect(() => {
     if (!data?.campagnes?.length || campagneActiveId !== "all") return
-    const enCours = data.campagnes.find(c => c.statut === "en_cours")
+    const enCours = [...data.campagnes]
+      .sort((a, b) => b.annee - a.annee)
+      .find(c => c.statut === "en_cours")
     if (enCours) setCampagneActiveId(String(enCours.id))
   }, [data?.campagnes])
 
@@ -138,7 +140,12 @@ function App() {
       <header className="bg-olive-700 text-white shadow-lg">
         <div className="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center gap-3">
           <div className="flex-1 min-w-0">
-            <h1 className="text-xl font-bold">🫒 Olive App</h1>
+            <h1
+              className="text-xl font-bold cursor-pointer hover:text-olive-200 transition-colors"
+              onClick={() => changerOnglet("resume")}
+            >
+              🫒 Olive App
+            </h1>
           </div>
 
           {/* Sélecteur campagne global */}
@@ -178,7 +185,7 @@ function App() {
 
               {/* Panneau notifications */}
               {notifOpen && (
-                <div className="absolute right-0 mt-2 w-80 rounded-xl bg-white shadow-xl border border-gray-200 z-200">
+                <div className="absolute right-0 mt-2 w-80 rounded-xl bg-white shadow-xl border border-gray-200 z-9999">
                   <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
                     <p className="text-sm font-semibold text-gray-800">Notifications</p>
                     <button type="button" onClick={() => setNotifOpen(false)} className="text-gray-400 hover:text-gray-600 text-lg leading-none">✕</button>
@@ -211,7 +218,7 @@ function App() {
               </button>
 
               {exploitationOpen && (
-                <div className="absolute right-0 mt-2 w-64 rounded-xl bg-white shadow-xl border border-gray-200 z-200 overflow-hidden">
+                <div className="absolute right-0 mt-2 w-64 rounded-xl bg-white shadow-xl border border-gray-200 z-9999 overflow-hidden">
                   <p className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wide border-b border-gray-100">Mon exploitation</p>
                   {menuExploitation.map(item => (
                     <button

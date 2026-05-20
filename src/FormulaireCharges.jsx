@@ -157,7 +157,7 @@ function FormulaireCharges({ campagneId }) {
   // Charges — paginées + filtrées + triées côté serveur
   useEffect(() => {
     async function loadCharges() {
-      if (!campagneId) {
+      if (!campagneId || campagneId === "all") {
         setCharges([])
         setTotalCount(0)
         setTotalMontantGlobal(0)
@@ -290,7 +290,7 @@ function FormulaireCharges({ campagneId }) {
     setSubmitting(true)
     setMessage("")
 
-    if (!campagneId) {
+    if (!campagneId || campagneId === "all") {
       setMessageType("error")
       setMessage("Veuillez sélectionner une campagne.")
       setSubmitting(false)

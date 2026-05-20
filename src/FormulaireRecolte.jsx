@@ -133,7 +133,7 @@ function FormulaireRecolte({ onDemanderVente, campagneId }) {
   // Récoltes — paginées + filtrées côté serveur
   useEffect(() => {
     async function loadRecoltes() {
-      if (!campagneId) {
+      if (!campagneId || campagneId === "all") {
         setRecoltes([])
         setTotalCount(0)
         setTotalKgGlobal(0)
@@ -369,7 +369,7 @@ function FormulaireRecolte({ onDemanderVente, campagneId }) {
     setDoublonChoiceVisible(false)
 
     try {
-      if (!campagneId) {
+      if (!campagneId || campagneId === "all") {
         setFormError("Veuillez sélectionner une campagne.")
         return
       }

@@ -81,7 +81,7 @@ function FormulaireTraitements({ campagneId }) {
   }, [])
 
   useEffect(() => {
-    if (!campagneId) {
+    if (!campagneId || campagneId === "all") {
       setTraitements([])
       setTotalCount(0)
       return
