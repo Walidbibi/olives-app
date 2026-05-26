@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react"
-import { supabase } from "./supabase"
+import { supabase, getCurrentUserId } from "./supabase"
 
 const DataContext = createContext(null)
 
@@ -19,6 +19,7 @@ export function DataProvider({ children }) {
     setLoading(true)
     setError(null)
     try {
+      const userId = await getCurrentUserId()
       const [
         { data: ventes = [], error: ventesError },
         { data: recoltes = [], error: recoltesError },
@@ -29,18 +30,19 @@ export function DataProvider({ children }) {
       ] = await Promise.all([
         supabase
           .from("vente")
-          .select("id, recolte_id, montant_total_dt, campagne_id, quantite_kg, prix_kg_dt"),
+          .select("id, recolte_id, montant_total_dt, campagne_id, quantite_kg, prix_kg_dt")
+          .eq("user_id", userId),
         supabase
           .from("recolte_journaliere")
-          .select(
-            "id, quantite_kg, parcelle_id, type_olive, campagne_id, date, est_vendu, destination"
-          ),
+          .select("id, quantite_kg, parcelle_id, type_olive, campagne_id, date, est_vendu, destination")
+          .eq("user_id", userId),
         supabase
           .from("charge")
-          .select("montant_dt, type_charge, sous_type, campagne_id, beneficiaire, date, equipement_id"),
-        supabase.from("campagne").select("id, annee, statut"),
-        supabase.from("parcelles").select("id, nom, latitude, longitude"),
-        supabase.from("equipements").select("id, nom, type"),
+          .select("montant_dt, type_charge, sous_type, campagne_id, beneficiaire, date, equipement_id")
+          .eq("user_id", userId),
+        supabase.from("campagne").select("id, annee, statut").eq("user_id", userId),
+        supabase.from("parcelles").select("id, nom, latitude, longitude").eq("user_id", userId),
+        supabase.from("equipements").select("id, nom, type").eq("user_id", userId),
       ])
 
       const firstError =

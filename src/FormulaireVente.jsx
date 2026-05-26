@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { supabase } from "./supabase"
+import { supabase, getCurrentUserId } from "./supabase"
 import { useAppData } from "./DataProvider"
 import EmptyState from "./EmptyState"
 import Modal from "./Modal"
@@ -453,6 +453,7 @@ function FormulaireVente({ recoltePourVente, clearRecoltePourVente, campagneId }
             quantite_kg: quantiteVendu,
             prix_kg_dt: prix,
             acheteur: acheteur || null,
+            user_id: await getCurrentUserId(),
           },
         ])
         errorVente = error

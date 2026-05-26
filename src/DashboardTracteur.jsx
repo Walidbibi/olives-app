@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from "react"
-import { supabase } from "./supabase"
+import { supabase, getCurrentUserId } from "./supabase"
 import Modal from "./Modal"
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts"
 
@@ -335,6 +335,7 @@ function DashboardTracteur({ equipement, onRetourProfil, ongletPrecedent }) {
     if (isNaN(prix) || prix < 0) { setError("Le prix par olivier doit être un nombre positif."); return }
 
     setSaving(true)
+    const userId = await getCurrentUserId()
     const payload = {
       equipement_id: equipement.id,
       campagne_id: form.campagne_id,
@@ -343,6 +344,7 @@ function DashboardTracteur({ equipement, onRetourProfil, ongletPrecedent }) {
       nb_oliviers: nb,
       prix_par_olivier: prix,
       commentaire: form.commentaire || null,
+      user_id: userId,
     }
 
     const montant = nb * prix
@@ -369,6 +371,7 @@ function DashboardTracteur({ equipement, onRetourProfil, ongletPrecedent }) {
             montant_dt: montant,
             description: descKey,
             equipement_id: payload.equipement_id,
+            user_id: userId,
           }])
         }
       }
@@ -382,6 +385,7 @@ function DashboardTracteur({ equipement, onRetourProfil, ongletPrecedent }) {
           type_revenu: "location_tracteur",
           montant_dt: montant,
           description: `activite_tracteur:${inserted.id}`,
+          user_id: userId,
           equipement_id: payload.equipement_id,
         }])
       }
@@ -428,6 +432,7 @@ function DashboardTracteur({ equipement, onRetourProfil, ongletPrecedent }) {
       montant_dt: montant,
       equipement_id: equipement.id,
       description: chargeForm.description || null,
+      user_id: await getCurrentUserId(),
     }])
     setSavingCharge(false)
 

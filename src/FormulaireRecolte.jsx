@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { supabase } from "./supabase"
+import { supabase, getCurrentUserId } from "./supabase"
 import { useAppData } from "./DataProvider"
 import EmptyState from "./EmptyState"
 import Modal from "./Modal"
@@ -478,6 +478,7 @@ function FormulaireRecolte({ onDemanderVente, campagneId }) {
         quantite_litres:
           isHuile && quantiteL !== "" ? parseFloat(quantiteL) : null,
         destination,
+        user_id: await getCurrentUserId(),
       }
 
       let errorRequete

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react"
+import { supabase } from "./supabase"
 import { useAppData } from "./DataProvider"
 import { useNotifications } from "./useNotifications"
 import FormulaireCampagne from "./FormulaireCampagne"
@@ -10,6 +11,9 @@ import Resume from "./Resume"
 import ProfilExploitation from "./ProfilExploitation"
 import DashboardTracteur from "./DashboardTracteur"
 import CarteExploitation from "./CarteExploitation"
+import LandingPage from "./LandingPage"
+import LoginPage from "./LoginPage"
+import SignupPage from "./SignupPage"
 
 
 const onglets = [
@@ -30,7 +34,7 @@ const menuExploitation = [
   { id: "rentabilite", label: "Tableau de rentabilité", icon: "📊" },
 ]
 
-function App() {
+function AppMain({ onSignOut }) {
   const { loading: globalLoading, error: globalError, refetch, data } = useAppData()
 
   const notifications = useNotifications({
@@ -239,6 +243,16 @@ function App() {
                       <span>{item.label}</span>
                     </button>
                   ))}
+                  <div className="border-t border-gray-100">
+                    <button
+                      type="button"
+                      onClick={() => { setExploitationOpen(false); onSignOut() }}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-left text-red-600 hover:bg-red-50 transition-colors"
+                    >
+                      <span className="text-lg">🚪</span>
+                      <span>Se déconnecter</span>
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -355,6 +369,53 @@ function App() {
 
     </div>
   )
+}
+
+function App() {
+  const [session, setSession] = useState(undefined) // undefined = chargement en cours
+  const [authView, setAuthView] = useState("landing") // "landing" | "login" | "signup"
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setSession(data.session ?? null))
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session ?? null)
+    })
+    return () => subscription.unsubscribe()
+  }, [])
+
+  async function handleSignOut() {
+    await supabase.auth.signOut()
+  }
+
+  // Chargement initial — évite un flash de landing avant que la session soit connue
+  if (session === undefined) return null
+
+  if (!session) {
+    if (authView === "login") {
+      return (
+        <LoginPage
+          onSuccess={() => {}}
+          onGoSignup={() => setAuthView("signup")}
+        />
+      )
+    }
+    if (authView === "signup") {
+      return (
+        <SignupPage
+          onSuccess={() => {}}
+          onGoLogin={() => setAuthView("login")}
+        />
+      )
+    }
+    return (
+      <LandingPage
+        onLogin={() => setAuthView("login")}
+        onSignup={() => setAuthView("signup")}
+      />
+    )
+  }
+
+  return <AppMain onSignOut={handleSignOut} />
 }
 
 export default App

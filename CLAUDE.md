@@ -218,9 +218,9 @@ Affiché quand l'utilisateur n'est pas connecté. Style produit moderne (Linear,
 - Avant le merge : créer son compte Supabase Auth + migrer ses données + tester avec deux comptes distincts
 
 #### Tâches
-- [ ] Landing page (`LandingPage.jsx`)
-- [ ] Login / Signup (`LoginPage.jsx`, `SignupPage.jsx`)
-- [ ] Auth state dans `App.jsx` (bascule landing ↔ app)
+- [x] Landing page (`LandingPage.jsx`) ✅ Fait session 2026-05-26 — hero, problème, 6 features, chiffres, étapes, témoignage, CTA, footer. `App` splitté en `App` (gestion session) + `AppMain` (app existante). Session placeholder `useState(null)` à remplacer par Supabase Auth à l'étape 3.
+- [x] Login / Signup (`LoginPage.jsx`, `SignupPage.jsx`) ✅ Fait session 2026-05-26 — formulaires email/mdp, appels Supabase Auth, écran de confirmation email après signup, navigation landing ↔ login ↔ signup.
+- [x] Auth state dans `App.jsx` ✅ Fait session 2026-05-26 — `getSession()` au chargement + `onAuthStateChange` pour la réactivité. Session persistante (refresh token 60j). Bouton "Se déconnecter" ajouté en bas du menu "Mon exploitation".
 - [ ] Colonne `user_id` sur toutes les tables (migration SQL)
 - [ ] Filtrage par `user_id` dans toutes les requêtes
 - [ ] Migration des données de ton père

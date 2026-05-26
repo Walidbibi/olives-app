@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
-import { supabase } from "./supabase"
+import { supabase, getCurrentUserId } from "./supabase"
 import { useAppData } from "./DataProvider"
 import EmptyState from "./EmptyState"
 import Modal from "./Modal"
@@ -334,6 +334,7 @@ function FormulaireCharges({ campagneId }) {
         typeCharge === "equipement" && equipementId
           ? equipementId
           : null,
+      user_id: await getCurrentUserId(),
     }
 
     let error

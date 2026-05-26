@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { supabase } from "./supabase"
+import { supabase, getCurrentUserId } from "./supabase"
 import { useAppData } from "./DataProvider"
 import Modal from "./Modal"
 import Spinner from "./Spinner"
@@ -108,6 +108,7 @@ function FormulaireCampagne() {
         date_debut: dateDebut,
         statut, // "en_cours" ou "terminee"
         notes: notes || null,
+        user_id: await getCurrentUserId(),
       }
 
       if (dateFin) {

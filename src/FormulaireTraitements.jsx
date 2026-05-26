@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { supabase } from "./supabase"
+import { supabase, getCurrentUserId } from "./supabase"
 import { useAppData } from "./DataProvider"
 import EmptyState from "./EmptyState"
 import Modal from "./Modal"
@@ -165,6 +165,7 @@ function FormulaireTraitements({ campagneId }) {
       date,
       type_action: typeAction,
       notes: notes?.trim() || null,
+      user_id: await getCurrentUserId(),
     }
 
     let error
