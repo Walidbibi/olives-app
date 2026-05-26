@@ -138,18 +138,33 @@ function App() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-olive-700 text-white shadow-lg">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex flex-col gap-2">
-          {/* Ligne 1 : titre + boutons */}
+        <div className="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center gap-3">
+          <div className="flex-1 min-w-0">
+            <h1
+              className="text-xl font-bold cursor-pointer hover:text-olive-200 transition-colors"
+              onClick={() => changerOnglet("resume")}
+            >
+              🫒 Olive App
+            </h1>
+          </div>
+
+          {/* Sélecteur campagne — inline sur desktop, pleine largeur sous le titre sur mobile */}
+          {(data?.campagnes ?? []).length > 0 && (
+            <select
+              value={campagneActiveId}
+              onChange={e => setCampagneActiveId(e.target.value)}
+              className="order-last w-full sm:order-none sm:w-auto rounded-md bg-olive-600 border border-olive-500 text-white px-3 py-1.5 text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-olive-300 cursor-pointer"
+            >
+              <option value="all" className="text-gray-800 bg-white">Toutes les campagnes</option>
+              {[...(data?.campagnes ?? [])].sort((a, b) => a.annee - b.annee).map(c => (
+                <option key={c.id} value={c.id} className="text-gray-800 bg-white">
+                  Campagne {c.annee} — {c.statut === "en_cours" ? "En cours" : "Terminée"}
+                </option>
+              ))}
+            </select>
+          )}
+
           <div className="flex items-center gap-2">
-            <div className="flex-1 min-w-0">
-              <h1
-                className="text-xl font-bold cursor-pointer hover:text-olive-200 transition-colors"
-                onClick={() => changerOnglet("resume")}
-              >
-                🫒 Olive App
-              </h1>
-            </div>
-            <div className="flex items-center gap-2">
             {/* Cloche notifications */}
             <div className="relative" ref={notifRef}>
               <button
@@ -228,23 +243,6 @@ function App() {
               )}
             </div>{/* fin boutons */}
           </div>{/* fin div ligne 1 flex items-center */}
-        </div>{/* fin ligne 1 wrapper */}
-
-          {/* Ligne 2 : sélecteur campagne — pleine largeur sur mobile */}
-          {(data?.campagnes ?? []).length > 0 && (
-            <select
-              value={campagneActiveId}
-              onChange={e => setCampagneActiveId(e.target.value)}
-              className="w-full sm:w-auto rounded-md bg-olive-600 border border-olive-500 text-white px-3 py-1.5 text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-olive-300 cursor-pointer"
-            >
-              <option value="all" className="text-gray-800 bg-white">Toutes les campagnes</option>
-              {[...(data?.campagnes ?? [])].sort((a, b) => a.annee - b.annee).map(c => (
-                <option key={c.id} value={c.id} className="text-gray-800 bg-white">
-                  Campagne {c.annee} — {c.statut === "en_cours" ? "En cours" : "Terminée"}
-                </option>
-              ))}
-            </select>
-          )}
         </div>
       </header>
 
