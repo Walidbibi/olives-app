@@ -14,7 +14,19 @@ const SOUS_TYPE_LABELS = {
   autre_equipement: "Autre charge équipement",
 }
 
-function DashboardTracteur({ equipement, onRetourProfil }) {
+const ONGLET_LABELS = {
+  resume: "Résumé",
+  recolte: "Récolte",
+  ventes: "Ventes",
+  charges: "Charges",
+  traitements: "Traitements",
+  profil: "Profil",
+  rentabilite: "Rentabilité",
+  campagnes: "Campagnes",
+  carte: "Carte",
+}
+
+function DashboardTracteur({ equipement, onRetourProfil, ongletPrecedent }) {
   // Menu d'actions et modales
   const [actionsOpen, setActionsOpen] = useState(false)
   const actionsRef = useRef(null)
@@ -450,9 +462,15 @@ function DashboardTracteur({ equipement, onRetourProfil }) {
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       {onRetourProfil && (
-        <button onClick={onRetourProfil} className="mb-4 text-xs text-olive-700 hover:underline">
-          ✕ Fermer
-        </button>
+        <nav className="mb-4 flex items-center gap-1.5 text-sm text-gray-500">
+          <button onClick={onRetourProfil} className="hover:text-olive-700 transition-colors">
+            {ONGLET_LABELS[ongletPrecedent] ?? "Mon exploitation"}
+          </button>
+          <span>/</span>
+          <span className="text-gray-900 font-medium">
+            {equipement ? equipement.nom : "Dashboard Tracteur"}
+          </span>
+        </nav>
       )}
 
       {/* En-tête */}
@@ -708,19 +726,19 @@ function DashboardTracteur({ equipement, onRetourProfil }) {
                   </p>
                   <div className="flex items-center gap-1">
                     <button type="button" onClick={() => setRecettesPage((p) => p - 1)} disabled={recettesPage === 0}
-                      className="rounded-md border border-gray-300 bg-white px-2.5 py-1 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40">←</button>
+                      className="rounded-md border border-gray-300 bg-white px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40">←</button>
                     {getPageNums(recettesPage, totalPages).map((p, i) =>
                       p === "…" ? (
                         <span key={`e-${i}`} className="px-1 text-sm text-gray-400">…</span>
                       ) : (
                         <button key={p} type="button" onClick={() => setRecettesPage(p - 1)}
-                          className={`rounded-md border px-2.5 py-1 text-sm font-medium ${p === recettesPage + 1 ? "border-olive-600 bg-olive-600 text-white" : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"}`}>
+                          className={`rounded-md border px-3 py-2.5 text-sm font-medium ${p === recettesPage + 1 ? "border-olive-600 bg-olive-600 text-white" : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"}`}>
                           {p}
                         </button>
                       )
                     )}
                     <button type="button" onClick={() => setRecettesPage((p) => p + 1)} disabled={recettesPage >= totalPages - 1}
-                      className="rounded-md border border-gray-300 bg-white px-2.5 py-1 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40">→</button>
+                      className="rounded-md border border-gray-300 bg-white px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40">→</button>
                   </div>
                 </div>
               )
@@ -878,19 +896,19 @@ function DashboardTracteur({ equipement, onRetourProfil }) {
                   </p>
                   <div className="flex items-center gap-1">
                     <button type="button" onClick={() => setActivitePage((p) => p - 1)} disabled={activitePage === 0}
-                      className="rounded-md border border-gray-300 bg-white px-2.5 py-1 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40">←</button>
+                      className="rounded-md border border-gray-300 bg-white px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40">←</button>
                     {getPageNums(activitePage, totalPages).map((p, i) =>
                       p === "…" ? (
                         <span key={`e-${i}`} className="px-1 text-sm text-gray-400">…</span>
                       ) : (
                         <button key={p} type="button" onClick={() => setActivitePage(p - 1)}
-                          className={`rounded-md border px-2.5 py-1 text-sm font-medium ${p === activitePage + 1 ? "border-olive-600 bg-olive-600 text-white" : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"}`}>
+                          className={`rounded-md border px-3 py-2.5 text-sm font-medium ${p === activitePage + 1 ? "border-olive-600 bg-olive-600 text-white" : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"}`}>
                           {p}
                         </button>
                       )
                     )}
                     <button type="button" onClick={() => setActivitePage((p) => p + 1)} disabled={activitePage >= totalPages - 1}
-                      className="rounded-md border border-gray-300 bg-white px-2.5 py-1 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40">→</button>
+                      className="rounded-md border border-gray-300 bg-white px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40">→</button>
                   </div>
                 </div>
               )}

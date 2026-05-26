@@ -102,9 +102,9 @@ Persona cible : Said, agriculteur, téléphone en main dans les champs, parfois 
 
 - [x] **Tri des colonnes de tableau** ✅ Fait session 2026-05-10
 - [x] **Composant Notification réutilisable** ✅ Fait session 2026-05-10
-- [ ] **Fil d'Ariane navigation imbriquée** : Profil > Équipements > Dashboard Tracteur sans repère visuel. Ajouter breadcrumb.
+- [x] **Fil d'Ariane navigation imbriquée** ✅ Fait session 2026-05-26 — breadcrumb `[Origine] / [Nom tracteur]` en haut du DashboardTracteur. Label dynamique selon l'onglet précédent (Résumé, Profil, Rentabilité…) ; fallback "Mon exploitation" si accès direct via le menu.
 - ~~**États vides unifiés**~~ : ❌ Abandonné — le bouton d'action dans l'EmptyState duplique le bouton déjà présent dans le header de chaque formulaire.
-- [ ] **Tailles de boutons touch** : Pagination en dessous du standard 44×44px.
+- [x] **Tailles de boutons touch** ✅ Fait session 2026-05-26 — boutons pagination `py-1` → `py-2.5` dans FormulaireRecolte, FormulaireVente, FormulaireCharges, DashboardTracteur (FormulaireTraitements était déjà correct).
 - [ ] **Accessibilité des modales** : Ajouter `aria-modal`, `aria-labelledby`, gestion focus clavier.
 - [x] **Footer inutile sur mobile** ✅ Fait session 2026-05-20 — supprimé.
 - [x] **Modales full-screen sur mobile** ✅ Fait session 2026-05-20 — bottom sheet depuis le bas sur mobile, modale centrée avec maxWidth sur desktop. Poignée visuelle ajoutée.

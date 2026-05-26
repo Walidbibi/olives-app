@@ -347,6 +347,7 @@ function App() {
 {ongletActif === "dashboard_tracteur" && (
   <DashboardTracteur
     equipement={tracteurSelectionne}
+    ongletPrecedent={ongletPrecedent}
     onRetourProfil={() => setOngletActif(ongletPrecedent)}
   />
 )}

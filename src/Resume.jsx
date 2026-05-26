@@ -837,72 +837,76 @@ function Resume({ onNavigateTracteur, campagneId = "all", autoOpenRentabilite = 
 
   return (
     <div>
-      {/* Filtre campagne + export */}
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
-        <h2 className="text-2xl font-bold text-gray-800">
-          Résumé de la campagne
-        </h2>
-        <div className="flex flex-wrap items-center gap-3">
-          <ExportExcel />
-        </div>
-      </div>
-
-      {/* Cartes KPI */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {cards.map((card) =>
-          card.hasDetail ? (
-            <button
-              key={card.id}
-              type="button"
-              onClick={() => card.onClick ? card.onClick() : setKpiActif(card.id)}
-              className={`${card.color} text-white rounded-xl px-4 py-3 shadow-lg transform hover:scale-[1.02] hover:shadow-xl hover:ring-2 hover:ring-white/50 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-white/60 cursor-pointer text-left group`}
-            >
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-2xl">{card.icon}</span>
-                <span className="text-sm opacity-90">
-                  {card.label}
-                </span>
-              </div>
-              <div className="text-2xl font-bold whitespace-nowrap">
-                {card.value}
-              </div>
-              {card.sub && (
-                <div className="text-xs mt-0.5 opacity-80">
-                  {card.sub}
-                </div>
-              )}
-              <div className="text-xs mt-1 opacity-70 group-hover:opacity-100 transition-opacity">
-                Voir le détail →
-              </div>
-            </button>
-          ) : (
-            <div
-              key={card.id}
-              className={`${card.color} text-white rounded-xl px-4 py-3 shadow-lg`}
-            >
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-2xl">{card.icon}</span>
-                <span className="text-sm opacity-90">
-                  {card.label}
-                </span>
-              </div>
-              <div className="text-2xl font-bold whitespace-nowrap">
-                {card.value}
-              </div>
-              {card.sub && (
-                <div className="text-xs mt-0.5 opacity-80">
-                  {card.sub}
-                </div>
-              )}
+      {!vueRentabilite && (
+        <>
+          {/* Filtre campagne + export */}
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
+            <h2 className="text-2xl font-bold text-gray-800">
+              Résumé de la campagne
+            </h2>
+            <div className="flex flex-wrap items-center gap-3">
+              <ExportExcel />
             </div>
-          )
-        )}
-      </div>
+          </div>
+
+          {/* Cartes KPI */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {cards.map((card) =>
+              card.hasDetail ? (
+                <button
+                  key={card.id}
+                  type="button"
+                  onClick={() => card.onClick ? card.onClick() : setKpiActif(card.id)}
+                  className={`${card.color} text-white rounded-xl px-4 py-3 shadow-lg transform hover:scale-[1.02] hover:shadow-xl hover:ring-2 hover:ring-white/50 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-white/60 cursor-pointer text-left group`}
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-2xl">{card.icon}</span>
+                    <span className="text-sm opacity-90">
+                      {card.label}
+                    </span>
+                  </div>
+                  <div className="text-2xl font-bold whitespace-nowrap">
+                    {card.value}
+                  </div>
+                  {card.sub && (
+                    <div className="text-xs mt-0.5 opacity-80">
+                      {card.sub}
+                    </div>
+                  )}
+                  <div className="text-xs mt-1 opacity-70 group-hover:opacity-100 transition-opacity">
+                    Voir le détail →
+                  </div>
+                </button>
+              ) : (
+                <div
+                  key={card.id}
+                  className={`${card.color} text-white rounded-xl px-4 py-3 shadow-lg`}
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-2xl">{card.icon}</span>
+                    <span className="text-sm opacity-90">
+                      {card.label}
+                    </span>
+                  </div>
+                  <div className="text-2xl font-bold whitespace-nowrap">
+                    {card.value}
+                  </div>
+                  {card.sub && (
+                    <div className="text-xs mt-0.5 opacity-80">
+                      {card.sub}
+                    </div>
+                  )}
+                </div>
+              )
+            )}
+          </div>
+        </>
+      )}
 
 
-      {/* Vue rentabilité — overlay plein écran */}
+      {/* Vue rentabilité */}
       {vueRentabilite && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-gray-50">
+        <div>
           <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
           <div className="flex items-center justify-between">
             <h3 className="text-xl font-bold text-gray-800">Analyse de rentabilité</h3>

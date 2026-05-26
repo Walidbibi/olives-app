@@ -908,7 +908,7 @@ function FormulaireVente({ recoltePourVente, clearRecoltePourVente, campagneId }
                   type="button"
                   onClick={() => setPageCourante((p) => Math.max(1, p - 1))}
                   disabled={pageCourante === 1}
-                  className="rounded-md border border-gray-300 bg-white px-2.5 py-1 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40"
+                  className="rounded-md border border-gray-300 bg-white px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40"
                 >
                   ←
                 </button>
@@ -920,7 +920,7 @@ function FormulaireVente({ recoltePourVente, clearRecoltePourVente, campagneId }
                       key={p}
                       type="button"
                       onClick={() => setPageCourante(p)}
-                      className={`rounded-md border px-2.5 py-1 text-sm font-medium ${
+                      className={`rounded-md border px-3 py-2.5 text-sm font-medium ${
                         p === pageCourante
                           ? "border-olive-600 bg-olive-600 text-white"
                           : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
@@ -934,7 +934,7 @@ function FormulaireVente({ recoltePourVente, clearRecoltePourVente, campagneId }
                   type="button"
                   onClick={() => setPageCourante((p) => Math.min(totalPagesVentes, p + 1))}
                   disabled={pageCourante === totalPagesVentes}
-                  className="rounded-md border border-gray-300 bg-white px-2.5 py-1 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40"
+                  className="rounded-md border border-gray-300 bg-white px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40"
                 >
                   →
                 </button>
