@@ -152,12 +152,12 @@ function AppMain({ onSignOut }) {
             </h1>
           </div>
 
-          {/* Sélecteur campagne global */}
+          {/* Sélecteur campagne — inline sur desktop, pleine largeur sous le titre sur mobile */}
           {(data?.campagnes ?? []).length > 0 && (
             <select
               value={campagneActiveId}
               onChange={e => setCampagneActiveId(e.target.value)}
-              className="rounded-md bg-olive-600 border border-olive-500 text-white px-3 py-1.5 text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-olive-300 cursor-pointer"
+              className="order-last w-full sm:order-none sm:w-auto rounded-md bg-olive-600 border border-olive-500 text-white px-3 py-1.5 text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-olive-300 cursor-pointer"
             >
               <option value="all" className="text-gray-800 bg-white">Toutes les campagnes</option>
               {[...(data?.campagnes ?? [])].sort((a, b) => a.annee - b.annee).map(c => (
@@ -255,8 +255,8 @@ function AppMain({ onSignOut }) {
                   </div>
                 </div>
               )}
-            </div>
-          </div>
+            </div>{/* fin boutons */}
+          </div>{/* fin div ligne 1 flex items-center */}
         </div>
       </header>
 
