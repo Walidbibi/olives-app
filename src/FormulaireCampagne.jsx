@@ -5,7 +5,7 @@ import Modal from "./Modal"
 import Spinner from "./Spinner"
 import Notification from "./Notification"
 
-function FormulaireCampagne() {
+function FormulaireCampagne({ onRetour }) {
   const { refetch } = useAppData()
   const [campagnes, setCampagnes] = useState([])
   const [loadingCampagnes, setLoadingCampagnes] = useState(true)
@@ -233,13 +233,24 @@ function FormulaireCampagne() {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={ouvrirModalCreation}
-          className="inline-flex items-center justify-center rounded-md bg-olive-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-olive-700 focus:outline-none focus:ring-2 focus:ring-olive-500 focus:ring-offset-2"
-        >
-          + Nouvelle campagne
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={ouvrirModalCreation}
+            className="inline-flex items-center justify-center rounded-md bg-olive-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-olive-700 focus:outline-none focus:ring-2 focus:ring-olive-500 focus:ring-offset-2"
+          >
+            + Nouvelle campagne
+          </button>
+          {onRetour && (
+            <button
+              type="button"
+              onClick={onRetour}
+              className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100 transition-colors"
+            >
+              ← Retour
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Messages globaux */}

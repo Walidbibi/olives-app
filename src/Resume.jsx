@@ -58,7 +58,7 @@ function Resume({ onNavigateTracteur, campagneId = "all", autoOpenRentabilite = 
   useEffect(() => {
     if (campagneId !== "all") {
       setDetailQuantiteVue("parcelle")
-      setDetailCaVue("parcelle")
+      setDetailCaVue("source")
       setDetailMargeVue("parcelle")
       setDetailHuilePersoVue("parcelle")
       setDetailChargesVue("type")
@@ -75,6 +75,7 @@ function Resume({ onNavigateTracteur, campagneId = "all", autoOpenRentabilite = 
   const [drilldown, setDrilldown] = useState(null)
   const [kgDrilldownAnnee, setKgDrilldownAnnee] = useState(null)
   const [rawVentes, setRawVentes] = useState([])
+  const [rawActivitesTracteur, setRawActivitesTracteur] = useState([])
   const [rawCharges, setRawCharges] = useState([])
   const [rawAutresRevenus, setRawAutresRevenus] = useState([])
   const [caBarCampagneId, setCaBarCampagneId] = useState(null)
@@ -115,6 +116,12 @@ function Resume({ onNavigateTracteur, campagneId = "all", autoOpenRentabilite = 
         .from("autre_revenu")
         .select("montant_dt, type_revenu, campagne_id")
 
+      let activitesTracteurQuery = supabase
+        .from("activite_tracteur")
+        .select("id, date_activite, campagne_id, equipement_id, mode_facturation, nb_oliviers, prix_par_olivier, nb_heures, prix_par_heure")
+        .eq("type_activite", "sous_traitance")
+        .order("date_activite", { ascending: false })
+
       if (campagneFiltreId !== "all") {
         ventesQuery = ventesQuery.eq("campagne_id", campagneFiltreId)
         recoltesQuery = recoltesQuery.eq(
@@ -123,6 +130,7 @@ function Resume({ onNavigateTracteur, campagneId = "all", autoOpenRentabilite = 
         )
         chargesQuery = chargesQuery.eq("campagne_id", campagneFiltreId)
         autresRevenusQuery = autresRevenusQuery.eq("campagne_id", campagneFiltreId)
+        activitesTracteurQuery = activitesTracteurQuery.eq("campagne_id", campagneFiltreId)
       }
 
       const [
@@ -133,6 +141,7 @@ function Resume({ onNavigateTracteur, campagneId = "all", autoOpenRentabilite = 
         { data: charges = [] },
         { data: autresRevenus = [] },
         { data: equipementsData = [] },
+        { data: activitesTracteur = [] },
       ] = await Promise.all([
         ventesQuery,
         recoltesQuery,
@@ -141,6 +150,7 @@ function Resume({ onNavigateTracteur, campagneId = "all", autoOpenRentabilite = 
         chargesQuery,
         autresRevenusQuery,
         supabase.from("equipements").select("id, nom, type, prix_achat").ilike("type", "%tracteur%").order("created_at", { ascending: true }),
+        activitesTracteurQuery,
       ])
 
       setEquipements(equipementsData)
@@ -514,6 +524,7 @@ function Resume({ onNavigateTracteur, campagneId = "all", autoOpenRentabilite = 
       setRawVentes(ventes)
       setRawCharges(charges)
       setRawAutresRevenus(autresRevenus)
+      setRawActivitesTracteur(activitesTracteur || [])
       setLoading(false)
     }
     loadKpi()
@@ -1175,9 +1186,9 @@ function Resume({ onNavigateTracteur, campagneId = "all", autoOpenRentabilite = 
         title="Chiffre d'affaires"
         size="large"
       >
-        {campagneFiltreId === "all" && (
-          <div className="mb-3">
-            <div className="inline-flex rounded-md border border-gray-200 bg-gray-50 p-1 text-xs">
+        <div className="mb-3">
+          <div className="inline-flex rounded-md border border-gray-200 bg-gray-50 p-1 text-xs">
+            {campagneFiltreId === "all" && (
               <button
                 type="button"
                 onClick={() => setDetailCaVue("annee")}
@@ -1185,23 +1196,32 @@ function Resume({ onNavigateTracteur, campagneId = "all", autoOpenRentabilite = 
               >
                 Par Campagne
               </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setDetailCaVue("source")}
+              className={`px-3 py-1 rounded-md ${detailCaVue === "source" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+            >
+              Par source de revenus
+            </button>
+            <button
+              type="button"
+              onClick={() => setDetailCaVue("parcelle")}
+              className={`px-3 py-1 rounded-md ${detailCaVue === "parcelle" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+            >
+              Par parcelle
+            </button>
+            {rawActivitesTracteur.length > 0 && (
               <button
                 type="button"
-                onClick={() => setDetailCaVue("source")}
-                className={`px-3 py-1 rounded-md ${detailCaVue === "source" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+                onClick={() => setDetailCaVue("tracteur")}
+                className={`px-3 py-1 rounded-md ${detailCaVue === "tracteur" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
               >
-                Par source de revenus
+                Activités tracteur
               </button>
-              <button
-                type="button"
-                onClick={() => setDetailCaVue("parcelle")}
-                className={`px-3 py-1 rounded-md ${detailCaVue === "parcelle" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
-              >
-                Par parcelle
-              </button>
-            </div>
+            )}
           </div>
-        )}
+        </div>
 
         <div className="overflow-x-auto overflow-y-auto max-h-[55vh]">
           {campagneFiltreId === "all" && detailCaVue === "annee" ? (
@@ -1274,7 +1294,7 @@ function Resume({ onNavigateTracteur, campagneId = "all", autoOpenRentabilite = 
                 )}
               </tbody>
             </table>
-          ) : campagneFiltreId === "all" && detailCaVue === "source" ? (() => {
+          ) : detailCaVue === "source" ? (() => {
             const caVentesTotal = rawVentes.reduce((sum, v) => sum + (parseFloat(v.montant_total_dt) || 0), 0)
             const autresMap = new Map()
             rawAutresRevenus.forEach((r) => {
@@ -1310,6 +1330,49 @@ function Resume({ onNavigateTracteur, campagneId = "all", autoOpenRentabilite = 
                     <tr className="bg-gray-50 font-semibold">
                       <td className="px-3 py-2 text-gray-900">Total</td>
                       <td className="px-3 py-2 text-right text-gray-900">{formatMontant(kpi.ca)}</td>
+                      <td className="px-3 py-2 text-right text-gray-900">100.0 %</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            )
+          })() : detailCaVue === "tracteur" ? (() => {
+            const totalOlivier = rawActivitesTracteur
+              .filter(a => a.mode_facturation !== "par_heure")
+              .reduce((sum, a) => sum + (parseInt(a.nb_oliviers, 10) || 0) * (parseFloat(a.prix_par_olivier) || 0), 0)
+            const totalHeure = rawActivitesTracteur
+              .filter(a => a.mode_facturation === "par_heure")
+              .reduce((sum, a) => sum + (parseFloat(a.nb_heures) || 0) * (parseFloat(a.prix_par_heure) || 0), 0)
+            const totalTracteur = totalOlivier + totalHeure
+            const lignes = [
+              { type: "À l'olivier", ca: totalOlivier },
+              { type: "À l'heure", ca: totalHeure },
+            ].filter(l => l.ca > 0)
+            return (
+              <table className="min-w-full divide-y divide-gray-200 text-sm">
+                <thead className="bg-gray-50 sticky top-0">
+                  <tr>
+                    <th className="px-3 py-2 text-left font-medium text-gray-600">Type de facturation</th>
+                    <th className="px-3 py-2 text-right font-medium text-gray-600">CA (DT)</th>
+                    <th className="px-3 py-2 text-right font-medium text-gray-600">Part</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 bg-white">
+                  {lignes.length === 0 ? (
+                    <tr><td colSpan={3} className="px-3 py-3 text-center text-gray-500">Aucune activité tracteur sous-traitance enregistrée.</td></tr>
+                  ) : lignes.map((ligne, idx) => (
+                    <tr key={idx}>
+                      <td className="px-3 py-2 text-gray-800">{ligne.type}</td>
+                      <td className="px-3 py-2 text-right text-gray-800">{formatMontant(ligne.ca)}</td>
+                      <td className="px-3 py-2 text-right text-gray-800">
+                        {totalTracteur > 0 ? `${((ligne.ca / totalTracteur) * 100).toFixed(1)} %` : "—"}
+                      </td>
+                    </tr>
+                  ))}
+                  {lignes.length > 0 && (
+                    <tr className="bg-gray-50 font-semibold">
+                      <td className="px-3 py-2 text-gray-900">Total</td>
+                      <td className="px-3 py-2 text-right text-gray-900">{formatMontant(totalTracteur)}</td>
                       <td className="px-3 py-2 text-right text-gray-900">100.0 %</td>
                     </tr>
                   )}

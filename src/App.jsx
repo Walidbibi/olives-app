@@ -148,8 +148,8 @@ function App() {
             </h1>
           </div>
 
-          {/* Sélecteur campagne — inline sur desktop, pleine largeur sous le titre sur mobile */}
-          {(data?.campagnes ?? []).length > 0 && (
+          {/* Sélecteur campagne — visible uniquement sur les onglets principaux */}
+          {(data?.campagnes ?? []).length > 0 && ongletsPrincipaux.includes(ongletActif) && (
             <select
               value={campagneActiveId}
               onChange={e => setCampagneActiveId(e.target.value)}
@@ -246,8 +246,8 @@ function App() {
         </div>
       </header>
 
-      {/* Navigation principale */}
-      <nav className="bg-white shadow-md sticky top-0 z-50">
+      {/* Navigation principale — masquée sur les pages Mon exploitation */}
+      <nav className={`bg-white shadow-md sticky top-0 z-50${ongletsPrincipaux.includes(ongletActif) ? "" : " hidden"}`}>
         <div className="max-w-6xl mx-auto px-2">
           <div className="grid grid-cols-5 sm:flex sm:flex-row gap-1 py-2">
             {onglets.map((o) => (
@@ -322,7 +322,7 @@ function App() {
             }}
           />
         )}
-        {ongletActif === "campagnes" && <FormulaireCampagne />}
+        {ongletActif === "campagnes" && <FormulaireCampagne onRetour={() => changerOnglet("resume")} />}
 
         {ongletActif === "carte" && (
           <CarteExploitation
@@ -333,6 +333,7 @@ function App() {
 
         {ongletActif === "profil" && (
           <ProfilExploitation
+            onRetour={() => changerOnglet("resume")}
             onVoirDashboardTracteur={(equipement) => {
               setTracteurSelectionne(equipement)
               setOngletPrecedent("profil")

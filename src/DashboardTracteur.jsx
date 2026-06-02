@@ -14,6 +14,13 @@ const SOUS_TYPE_LABELS = {
   autre_equipement: "Autre charge équipement",
 }
 
+function calcMontantActivite(a) {
+  if (a.mode_facturation === "par_heure") {
+    return (parseFloat(a.nb_heures) || 0) * (parseFloat(a.prix_par_heure) || 0)
+  }
+  return (parseInt(a.nb_oliviers, 10) || 0) * (parseFloat(a.prix_par_olivier) || 0)
+}
+
 const ONGLET_LABELS = {
   resume: "Résumé",
   recolte: "Récolte",
@@ -59,8 +66,11 @@ function DashboardTracteur({ equipement, onRetourProfil, ongletPrecedent }) {
   const [form, setForm] = useState({
     date_activite: new Date().toISOString().slice(0, 10),
     type_activite: "propre",
+    mode_facturation: "par_olivier",
     nb_oliviers: "",
     prix_par_olivier: "",
+    nb_heures: "",
+    prix_par_heure: "",
     commentaire: "",
     campagne_id: "",
   })
@@ -118,11 +128,7 @@ function DashboardTracteur({ equipement, onRetourProfil, ongletPrecedent }) {
     () =>
       activites
         .filter((a) => a.type_activite === "sous_traitance")
-        .reduce(
-          (sum, a) =>
-            sum + (parseInt(a.nb_oliviers, 10) || 0) * (parseFloat(a.prix_par_olivier) || 0),
-          0
-        ),
+        .reduce((sum, a) => sum + calcMontantActivite(a), 0),
     [activites]
   )
 
@@ -149,6 +155,19 @@ function DashboardTracteur({ equipement, onRetourProfil, ongletPrecedent }) {
 
   // Gain total d'avoir le tracteur vs ne pas l'avoir
   const impactTracteur = loadingCharges ? null : economiesHypothetiques + recettesLocation - totalChargesTracteurs
+
+  const recettesParMode = useMemo(() => {
+    const olivier = activites
+      .filter((a) => a.type_activite === "sous_traitance" && a.mode_facturation !== "par_heure")
+      .reduce((sum, a) => sum + calcMontantActivite(a), 0)
+    const heure = activites
+      .filter((a) => a.type_activite === "sous_traitance" && a.mode_facturation === "par_heure")
+      .reduce((sum, a) => sum + calcMontantActivite(a), 0)
+    return [
+      { name: "À l'olivier", value: olivier },
+      { name: "À l'heure", value: heure },
+    ].filter((d) => d.value > 0)
+  }, [activites])
 
   const oliviersParType = useMemo(() => {
     const propre = activites
@@ -289,8 +308,11 @@ function DashboardTracteur({ equipement, onRetourProfil, ongletPrecedent }) {
     setForm({
       date_activite: new Date().toISOString().slice(0, 10),
       type_activite: "propre",
+      mode_facturation: "par_olivier",
       nb_oliviers: "",
       prix_par_olivier: "",
+      nb_heures: "",
+      prix_par_heure: "",
       commentaire: "",
       campagne_id: campagneId || "",
     })
@@ -311,8 +333,11 @@ function DashboardTracteur({ equipement, onRetourProfil, ongletPrecedent }) {
     setForm({
       date_activite: activite.date_activite,
       type_activite: activite.type_activite,
-      nb_oliviers: String(activite.nb_oliviers),
-      prix_par_olivier: String(activite.prix_par_olivier),
+      mode_facturation: activite.mode_facturation || "par_olivier",
+      nb_oliviers: activite.nb_oliviers != null ? String(activite.nb_oliviers) : "",
+      prix_par_olivier: activite.prix_par_olivier != null ? String(activite.prix_par_olivier) : "",
+      nb_heures: activite.nb_heures != null ? String(activite.nb_heures) : "",
+      prix_par_heure: activite.prix_par_heure != null ? String(activite.prix_par_heure) : "",
       commentaire: activite.commentaire || "",
       campagne_id: activite.campagne_id || "",
     })
@@ -329,10 +354,25 @@ function DashboardTracteur({ equipement, onRetourProfil, ongletPrecedent }) {
 
     if (!equipement) { setError("Aucun tracteur sélectionné."); return }
     if (!form.campagne_id) { setError("Veuillez sélectionner une campagne."); return }
-    const nb = parseInt(form.nb_oliviers, 10)
-    if (isNaN(nb) || nb <= 0) { setError("Le nombre d'oliviers doit être un entier positif."); return }
-    const prix = parseFloat(form.prix_par_olivier)
-    if (isNaN(prix) || prix < 0) { setError("Le prix par olivier doit être un nombre positif."); return }
+
+    const isSousTraitance = form.type_activite === "sous_traitance"
+    const isParHeure = isSousTraitance && form.mode_facturation === "par_heure"
+
+    let nb = null, prix = null, nbHeures = null, prixHeure = null, montant = 0
+
+    if (isParHeure) {
+      nbHeures = parseFloat(form.nb_heures)
+      if (isNaN(nbHeures) || nbHeures <= 0) { setError("Le nombre d'heures doit être un nombre positif."); return }
+      prixHeure = parseFloat(form.prix_par_heure)
+      if (isNaN(prixHeure) || prixHeure < 0) { setError("Le prix à l'heure doit être un nombre positif."); return }
+      montant = nbHeures * prixHeure
+    } else {
+      nb = parseInt(form.nb_oliviers, 10)
+      if (isNaN(nb) || nb <= 0) { setError("Le nombre d'oliviers doit être un entier positif."); return }
+      prix = parseFloat(form.prix_par_olivier)
+      if (isNaN(prix) || prix < 0) { setError("Le prix par olivier doit être un nombre positif."); return }
+      montant = nb * prix
+    }
 
     setSaving(true)
     const payload = {
@@ -340,12 +380,13 @@ function DashboardTracteur({ equipement, onRetourProfil, ongletPrecedent }) {
       campagne_id: form.campagne_id,
       date_activite: form.date_activite,
       type_activite: form.type_activite,
-      nb_oliviers: nb,
-      prix_par_olivier: prix,
+      mode_facturation: isSousTraitance ? form.mode_facturation : "par_olivier",
+      nb_oliviers: isParHeure ? null : nb,
+      prix_par_olivier: isParHeure ? null : prix,
+      nb_heures: isParHeure ? nbHeures : null,
+      prix_par_heure: isParHeure ? prixHeure : null,
       commentaire: form.commentaire || null,
     }
-
-    const montant = nb * prix
 
     let dbError
     if (editingActivite) {
@@ -394,7 +435,7 @@ function DashboardTracteur({ equipement, onRetourProfil, ongletPrecedent }) {
   }
 
   const handleDelete = async (activite) => {
-    if (!window.confirm(`Supprimer l'activité du ${activite.date_activite} (${activite.nb_oliviers} oliviers) ?`)) return
+    if (!window.confirm(`Supprimer l'activité du ${activite.date_activite} ?`)) return
     setDeletingId(activite.id)
     const { error } = await supabase.from("activite_tracteur").delete().eq("id", activite.id)
     if (!error && activite.type_activite === "sous_traitance") {
@@ -520,7 +561,7 @@ function DashboardTracteur({ equipement, onRetourProfil, ongletPrecedent }) {
                 <span>Actions</span>
               </button>
               {actionsOpen && (
-                <div className="absolute right-0 mt-2 w-64 rounded-md border border-gray-200 bg-white shadow-lg z-10">
+                <div className="absolute left-0 sm:left-auto sm:right-0 mt-2 w-64 rounded-md border border-gray-200 bg-white shadow-lg z-10">
                   <button
                     type="button"
                     onClick={() => { setActionsOpen(false); handleOpenActiviteModal() }}
@@ -645,14 +686,17 @@ function DashboardTracteur({ equipement, onRetourProfil, ongletPrecedent }) {
             {/* Vue cartes — mobile uniquement */}
             <div className="md:hidden space-y-2 mb-2">
               {recettesPageData.map((a) => {
-                const montant = (parseInt(a.nb_oliviers, 10) || 0) * (parseFloat(a.prix_par_olivier) || 0)
+                const montant = calcMontantActivite(a)
                 return (
                   <div key={a.id} className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
                     <div className="flex items-start justify-between mb-1">
                       <p className="text-sm font-semibold text-gray-900">{a.date_activite}</p>
                       <div className="text-right">
                         <p className="text-xl font-bold text-gray-900">{fmt(montant)} DT</p>
-                        <p className="text-xs text-gray-500">{Number(a.nb_oliviers).toLocaleString("fr-FR")} oliviers × {fmt(parseFloat(a.prix_par_olivier) || 0)} DT</p>
+                        {a.mode_facturation === "par_heure"
+                          ? <p className="text-xs text-gray-500">{fmt(parseFloat(a.nb_heures) || 0, 1)} h × {fmt(parseFloat(a.prix_par_heure) || 0)} DT/h</p>
+                          : <p className="text-xs text-gray-500">{Number(a.nb_oliviers).toLocaleString("fr-FR")} oliviers × {fmt(parseFloat(a.prix_par_olivier) || 0)} DT</p>
+                        }
                       </div>
                     </div>
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-2">
@@ -677,8 +721,8 @@ function DashboardTracteur({ equipement, onRetourProfil, ongletPrecedent }) {
                   <tr className="bg-gray-50 text-gray-500 uppercase tracking-wide">
                     <th className="px-3 py-2 text-left font-medium">Date</th>
                     <th className="px-3 py-2 text-left font-medium">Campagne</th>
-                    <th className="px-3 py-2 text-right font-medium">Oliviers</th>
-                    <th className="px-3 py-2 text-right font-medium">Prix/olivier</th>
+                    <th className="px-3 py-2 text-right font-medium">Quantité</th>
+                    <th className="px-3 py-2 text-right font-medium">Prix unit.</th>
                     <th className="px-3 py-2 text-right font-medium">Montant</th>
                     <th className="px-3 py-2 text-left font-medium">Commentaire</th>
                     <th className="px-3 py-2"></th>
@@ -686,13 +730,22 @@ function DashboardTracteur({ equipement, onRetourProfil, ongletPrecedent }) {
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {recettesPageData.map((a) => {
-                    const montant = (parseInt(a.nb_oliviers, 10) || 0) * (parseFloat(a.prix_par_olivier) || 0)
+                    const montant = calcMontantActivite(a)
                     return (
                       <tr key={a.id} className="hover:bg-gray-50">
                         <td className="px-3 py-2 text-gray-800 whitespace-nowrap">{a.date_activite}</td>
                         <td className="px-3 py-2 text-gray-600">{campagneMap[a.campagne_id] ?? "-"}</td>
-                        <td className="px-3 py-2 text-right text-gray-800">{Number(a.nb_oliviers).toLocaleString("fr-FR")}</td>
-                        <td className="px-3 py-2 text-right text-gray-600">{fmt(parseFloat(a.prix_par_olivier) || 0)} DT</td>
+                        {a.mode_facturation === "par_heure" ? (
+                          <>
+                            <td className="px-3 py-2 text-right text-gray-800">{fmt(parseFloat(a.nb_heures) || 0, 1)} h</td>
+                            <td className="px-3 py-2 text-right text-gray-600">{fmt(parseFloat(a.prix_par_heure) || 0)} DT/h</td>
+                          </>
+                        ) : (
+                          <>
+                            <td className="px-3 py-2 text-right text-gray-800">{Number(a.nb_oliviers).toLocaleString("fr-FR")} oliviers</td>
+                            <td className="px-3 py-2 text-right text-gray-600">{fmt(parseFloat(a.prix_par_olivier) || 0)} DT</td>
+                          </>
+                        )}
                         <td className="px-3 py-2 text-right font-medium text-gray-800">{fmt(montant)} DT</td>
                         <td className="px-3 py-2 text-gray-500 max-w-40 truncate">{a.commentaire || "—"}</td>
                         <td className="px-3 py-2 whitespace-nowrap text-right">
@@ -802,14 +855,23 @@ function DashboardTracteur({ equipement, onRetourProfil, ongletPrecedent }) {
               {/* Vue cartes — mobile uniquement */}
               <div className="md:hidden space-y-2 mb-2">
                 {pageActivites.map((a) => {
-                  const montant = (parseInt(a.nb_oliviers, 10) || 0) * (parseFloat(a.prix_par_olivier) || 0)
+                  const montant = calcMontantActivite(a)
                   return (
                     <div key={a.id} className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
                       <div className="flex items-start justify-between mb-1">
                         <p className="text-sm font-semibold text-gray-900">{a.date_activite}</p>
                         <div className="text-right">
-                          <p className="text-xl font-bold text-gray-900">{Number(a.nb_oliviers).toLocaleString("fr-FR")} oliviers</p>
-                          <p className="text-xs text-gray-500">{fmt(parseFloat(a.prix_par_olivier) || 0)} DT/olivier</p>
+                          {a.mode_facturation === "par_heure" ? (
+                            <>
+                              <p className="text-xl font-bold text-gray-900">{fmt(parseFloat(a.nb_heures) || 0, 1)} h</p>
+                              <p className="text-xs text-gray-500">{fmt(parseFloat(a.prix_par_heure) || 0)} DT/h</p>
+                            </>
+                          ) : (
+                            <>
+                              <p className="text-xl font-bold text-gray-900">{Number(a.nb_oliviers).toLocaleString("fr-FR")} oliviers</p>
+                              <p className="text-xs text-gray-500">{fmt(parseFloat(a.prix_par_olivier) || 0)} DT/olivier</p>
+                            </>
+                          )}
                         </div>
                       </div>
                       <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-2">
@@ -843,8 +905,8 @@ function DashboardTracteur({ equipement, onRetourProfil, ongletPrecedent }) {
                       <th className="px-3 py-2 text-left font-medium">Date</th>
                       <th className="px-3 py-2 text-left font-medium">Campagne</th>
                       <th className="px-3 py-2 text-left font-medium">Type</th>
-                      <th className="px-3 py-2 text-right font-medium">Oliviers</th>
-                      <th className="px-3 py-2 text-right font-medium">Prix/olivier</th>
+                      <th className="px-3 py-2 text-right font-medium">Quantité</th>
+                      <th className="px-3 py-2 text-right font-medium">Prix unit.</th>
                       <th className="px-3 py-2 text-right font-medium">Montant</th>
                       <th className="px-3 py-2 text-left font-medium">Commentaire</th>
                       <th className="px-3 py-2"></th>
@@ -852,7 +914,7 @@ function DashboardTracteur({ equipement, onRetourProfil, ongletPrecedent }) {
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {pageActivites.map((a) => {
-                      const montant = (parseInt(a.nb_oliviers, 10) || 0) * (parseFloat(a.prix_par_olivier) || 0)
+                      const montant = calcMontantActivite(a)
                       return (
                         <tr key={a.id} className="hover:bg-gray-50">
                           <td className="px-3 py-2 text-gray-800 whitespace-nowrap">{a.date_activite}</td>
@@ -864,8 +926,17 @@ function DashboardTracteur({ equipement, onRetourProfil, ongletPrecedent }) {
                               <span className="inline-flex items-center rounded-full bg-olive-50 px-2 py-0.5 text-[10px] font-medium text-olive-700">Mes parcelles</span>
                             )}
                           </td>
-                          <td className="px-3 py-2 text-right text-gray-800">{Number(a.nb_oliviers).toLocaleString("fr-FR")}</td>
-                          <td className="px-3 py-2 text-right text-gray-600">{fmt(parseFloat(a.prix_par_olivier) || 0)} DT</td>
+                          {a.mode_facturation === "par_heure" ? (
+                            <>
+                              <td className="px-3 py-2 text-right text-gray-800">{fmt(parseFloat(a.nb_heures) || 0, 1)} h</td>
+                              <td className="px-3 py-2 text-right text-gray-600">{fmt(parseFloat(a.prix_par_heure) || 0)} DT/h</td>
+                            </>
+                          ) : (
+                            <>
+                              <td className="px-3 py-2 text-right text-gray-800">{Number(a.nb_oliviers ?? 0).toLocaleString("fr-FR")} oliviers</td>
+                              <td className="px-3 py-2 text-right text-gray-600">{fmt(parseFloat(a.prix_par_olivier) || 0)} DT</td>
+                            </>
+                          )}
                           <td className="px-3 py-2 text-right font-medium text-gray-800">{fmt(montant)} DT</td>
                           <td className="px-3 py-2 text-gray-500 max-w-40 truncate">{a.commentaire || "—"}</td>
                           <td className="px-3 py-2 whitespace-nowrap text-right">
@@ -1021,6 +1092,39 @@ function DashboardTracteur({ equipement, onRetourProfil, ongletPrecedent }) {
         </section>
       )}
 
+      {/* Répartition des revenus */}
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+        <div className="bg-white border border-gray-200 rounded-lg px-4 py-4 shadow-sm">
+          <h2 className="text-sm font-semibold text-gray-900 mb-3">Répartition des revenus de sous-traitance</h2>
+          {recettesParMode.length === 0 ? (
+            <p className="text-xs text-gray-400">Aucune activité de sous-traitance enregistrée.</p>
+          ) : (
+            <ResponsiveContainer width="100%" height={240}>
+              <PieChart>
+                <Pie
+                  data={recettesParMode}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="52%"
+                  outerRadius={75}
+                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  labelLine={false}
+                >
+                  <Cell fill="#6366f1" />
+                  <Cell fill="#9333ea" />
+                </Pie>
+                <Tooltip
+                  formatter={(value) => [value.toLocaleString("fr-FR", { minimumFractionDigits: 3, maximumFractionDigits: 3 }) + " DT", ""]}
+                  separator=""
+                />
+                <Legend iconType="circle" iconSize={10} wrapperStyle={{ fontSize: 12 }} />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+      </section>
+
       {/* Sections placeholder */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
         <div className="bg-white border border-gray-200 rounded-lg px-4 py-4 shadow-sm">
@@ -1140,16 +1244,44 @@ function DashboardTracteur({ equipement, onRetourProfil, ongletPrecedent }) {
                 <option value="sous_traitance">Sous-traitance</option>
               </select>
             </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Nombre d&apos;oliviers</label>
-              <input type="number" name="nb_oliviers" min="1" value={form.nb_oliviers} onChange={handleChange}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-olive-500 focus:ring-olive-500" required />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Prix par olivier (DT)</label>
-              <input type="number" step="0.01" min="0" name="prix_par_olivier" value={form.prix_par_olivier} onChange={handleChange}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-olive-500 focus:ring-olive-500" required />
-            </div>
+            {form.type_activite === "sous_traitance" && (
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-medium text-gray-700 mb-1">Mode de facturation</label>
+                <select name="mode_facturation" value={form.mode_facturation} onChange={handleChange}
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-olive-500 focus:ring-olive-500">
+                  <option value="par_olivier">À l&apos;olivier</option>
+                  <option value="par_heure">À l&apos;heure</option>
+                </select>
+              </div>
+            )}
+            {(form.type_activite !== "sous_traitance" || form.mode_facturation === "par_olivier") && (
+              <>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Nombre d&apos;oliviers</label>
+                  <input type="number" name="nb_oliviers" min="1" value={form.nb_oliviers} onChange={handleChange}
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-olive-500 focus:ring-olive-500" required />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Prix par olivier (DT)</label>
+                  <input type="number" step="0.01" min="0" name="prix_par_olivier" value={form.prix_par_olivier} onChange={handleChange}
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-olive-500 focus:ring-olive-500" required />
+                </div>
+              </>
+            )}
+            {form.type_activite === "sous_traitance" && form.mode_facturation === "par_heure" && (
+              <>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Nombre d&apos;heures</label>
+                  <input type="number" step="0.5" min="0.5" name="nb_heures" value={form.nb_heures} onChange={handleChange}
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-olive-500 focus:ring-olive-500" required />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Prix à l&apos;heure (DT)</label>
+                  <input type="number" step="0.01" min="0" name="prix_par_heure" value={form.prix_par_heure} onChange={handleChange}
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-olive-500 focus:ring-olive-500" required />
+                </div>
+              </>
+            )}
           </div>
 
           <div>
