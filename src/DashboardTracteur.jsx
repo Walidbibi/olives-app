@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from "react"
 import { supabase } from "./supabase"
 import Modal from "./Modal"
+import Notification from "./Notification"
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts"
 
 const SOUS_TYPE_LABELS = {
@@ -77,6 +78,9 @@ function DashboardTracteur({ equipement, onRetourProfil, ongletPrecedent }) {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
   const [deletingId, setDeletingId] = useState(null)
+  const [confirmDeleteActivite, setConfirmDeleteActivite] = useState(null)
+  const [message, setMessage] = useState("")
+  const [messageType, setMessageType] = useState("success")
 
   // Compteur pour déclencher le rechargement après toute mutation
   const [refreshKey, setRefreshKey] = useState(0)
@@ -145,11 +149,7 @@ function DashboardTracteur({ equipement, onRetourProfil, ongletPrecedent }) {
     () =>
       activites
         .filter((a) => a.type_activite === "propre")
-        .reduce(
-          (sum, a) =>
-            sum + (parseInt(a.nb_oliviers, 10) || 0) * (parseFloat(a.prix_par_olivier) || 0),
-          0
-        ),
+        .reduce((sum, a) => sum + calcMontantActivite(a), 0),
     [activites]
   )
 
@@ -434,15 +434,27 @@ function DashboardTracteur({ equipement, onRetourProfil, ongletPrecedent }) {
     setRefreshKey((k) => k + 1)
   }
 
-  const handleDelete = async (activite) => {
-    if (!window.confirm(`Supprimer l'activité du ${activite.date_activite} ?`)) return
+  const handleDelete = (activite) => {
+    setConfirmDeleteActivite(activite)
+  }
+
+  const handleConfirmDelete = async () => {
+    const activite = confirmDeleteActivite
+    setConfirmDeleteActivite(null)
     setDeletingId(activite.id)
     const { error } = await supabase.from("activite_tracteur").delete().eq("id", activite.id)
     if (!error && activite.type_activite === "sous_traitance") {
       await supabase.from("autre_revenu").delete().eq("description", `activite_tracteur:${activite.id}`)
     }
     setDeletingId(null)
-    if (error) { console.error(error); return }
+    if (error) {
+      console.error(error)
+      setMessageType("error")
+      setMessage("Erreur lors de la suppression. Réessaie.")
+      return
+    }
+    setMessageType("success")
+    setMessage("Activité supprimée.")
     setRefreshKey((k) => k + 1)
   }
 
@@ -513,6 +525,36 @@ function DashboardTracteur({ equipement, onRetourProfil, ongletPrecedent }) {
           </span>
         </nav>
       )}
+
+      <Notification message={message} type={messageType} onDismiss={() => setMessage("")} />
+
+      {/* Modal confirmation suppression activité */}
+      <Modal
+        isOpen={!!confirmDeleteActivite}
+        onClose={() => setConfirmDeleteActivite(null)}
+        title="Supprimer l'activité"
+        size="medium"
+      >
+        <p className="text-sm text-gray-700 mb-6">
+          Supprimer l&apos;activité du <span className="font-semibold">{confirmDeleteActivite?.date_activite}</span> ? Cette action est irréversible.
+        </p>
+        <div className="flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={() => setConfirmDeleteActivite(null)}
+            className="px-3 py-1.5 text-xs rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50"
+          >
+            Annuler
+          </button>
+          <button
+            type="button"
+            onClick={handleConfirmDelete}
+            className="px-3 py-1.5 text-xs rounded-md bg-red-600 text-white hover:bg-red-700"
+          >
+            Supprimer
+          </button>
+        </div>
+      </Modal>
 
       {/* En-tête */}
       <header className="mb-6">
@@ -1244,17 +1286,15 @@ function DashboardTracteur({ equipement, onRetourProfil, ongletPrecedent }) {
                 <option value="sous_traitance">Sous-traitance</option>
               </select>
             </div>
-            {form.type_activite === "sous_traitance" && (
-              <div className="sm:col-span-2">
-                <label className="block text-xs font-medium text-gray-700 mb-1">Mode de facturation</label>
-                <select name="mode_facturation" value={form.mode_facturation} onChange={handleChange}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-olive-500 focus:ring-olive-500">
-                  <option value="par_olivier">À l&apos;olivier</option>
-                  <option value="par_heure">À l&apos;heure</option>
-                </select>
-              </div>
-            )}
-            {(form.type_activite !== "sous_traitance" || form.mode_facturation === "par_olivier") && (
+            <div className="sm:col-span-2">
+              <label className="block text-xs font-medium text-gray-700 mb-1">Mode de facturation</label>
+              <select name="mode_facturation" value={form.mode_facturation} onChange={handleChange}
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-olive-500 focus:ring-olive-500">
+                <option value="par_olivier">À l&apos;olivier</option>
+                <option value="par_heure">À l&apos;heure</option>
+              </select>
+            </div>
+            {(form.mode_facturation === "par_olivier") && (
               <>
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">Nombre d&apos;oliviers</label>
@@ -1268,7 +1308,7 @@ function DashboardTracteur({ equipement, onRetourProfil, ongletPrecedent }) {
                 </div>
               </>
             )}
-            {form.type_activite === "sous_traitance" && form.mode_facturation === "par_heure" && (
+            {form.mode_facturation === "par_heure" && (
               <>
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">Nombre d&apos;heures</label>
