@@ -356,7 +356,7 @@ function DashboardTracteur({ equipement, onRetourProfil, ongletPrecedent }) {
     if (!form.campagne_id) { setError("Veuillez sélectionner une campagne."); return }
 
     const isSousTraitance = form.type_activite === "sous_traitance"
-    const isParHeure = isSousTraitance && form.mode_facturation === "par_heure"
+    const isParHeure = form.mode_facturation === "par_heure"
 
     let nb = null, prix = null, nbHeures = null, prixHeure = null, montant = 0
 
@@ -380,7 +380,7 @@ function DashboardTracteur({ equipement, onRetourProfil, ongletPrecedent }) {
       campagne_id: form.campagne_id,
       date_activite: form.date_activite,
       type_activite: form.type_activite,
-      mode_facturation: isSousTraitance ? form.mode_facturation : "par_olivier",
+      mode_facturation: form.mode_facturation,
       nb_oliviers: isParHeure ? null : nb,
       prix_par_olivier: isParHeure ? null : prix,
       nb_heures: isParHeure ? nbHeures : null,
