@@ -56,6 +56,11 @@ function DashboardTracteur({ equipement, onRetourProfil, ongletPrecedent }) {
   const [showActivitesDetail, setShowActivitesDetail] = useState(false)
   const [showChargesDetail, setShowChargesDetail] = useState(false)
   const [showRecettesDetail, setShowRecettesDetail] = useState(false)
+  const [showHeuresDetail, setShowHeuresDetail] = useState(false)
+  const [showEconomieDetail, setShowEconomieDetail] = useState(false)
+  const [heuresSort, setHeuresSort] = useState({ col: "date_activite", dir: "desc" })
+  const [economieSort, setEconomieSort] = useState({ col: "date_activite", dir: "desc" })
+  const [heuresPage, setHeuresPage] = useState(0)
 
   // Campagnes
   const [campagnes, setCampagnes] = useState([])
@@ -126,6 +131,33 @@ function DashboardTracteur({ equipement, onRetourProfil, ongletPrecedent }) {
   const totalOliviersTracteur = useMemo(
     () => activites.reduce((sum, a) => sum + (parseInt(a.nb_oliviers, 10) || 0), 0),
     [activites]
+  )
+
+  const totalHeures = useMemo(
+    () => activites
+      .filter((a) => a.mode_facturation === "par_heure")
+      .reduce((sum, a) => sum + (parseFloat(a.nb_heures) || 0), 0),
+    [activites]
+  )
+
+  const sortActivites = (list, { col, dir }) => {
+    return [...list].sort((a, b) => {
+      let va = a[col], vb = b[col]
+      if (col === "montant") { va = calcMontantActivite(a); vb = calcMontantActivite(b) }
+      if (col === "nb_heures") { va = parseFloat(a.nb_heures) || 0; vb = parseFloat(b.nb_heures) || 0 }
+      if (typeof va === "string") return dir === "asc" ? va.localeCompare(vb) : vb.localeCompare(va)
+      return dir === "asc" ? va - vb : vb - va
+    })
+  }
+
+  const activitesParHeureSorted = useMemo(
+    () => sortActivites(activites.filter((a) => a.mode_facturation === "par_heure"), heuresSort),
+    [activites, heuresSort]
+  )
+
+  const activitesPropSorted = useMemo(
+    () => sortActivites(activites.filter((a) => a.type_activite === "propre"), economieSort),
+    [activites, economieSort]
   )
 
   const recettesLocation = useMemo(
@@ -236,6 +268,7 @@ function DashboardTracteur({ equipement, onRetourProfil, ongletPrecedent }) {
   }, [equipement, campagneId, refreshKey])
 
   useEffect(() => { setActivitePage(0) }, [activites])
+  useEffect(() => { setHeuresPage(0) }, [activitesParHeureSorted])
 
   // Charger les recettes location (pagination serveur — modal uniquement)
   useEffect(() => {
@@ -633,7 +666,7 @@ function DashboardTracteur({ equipement, onRetourProfil, ongletPrecedent }) {
       </header>
 
       {/* Grille 4 KPI */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
 
         {/* Gain net */}
         <div className="bg-white border border-gray-200 rounded-lg px-3 py-3 shadow-sm">
@@ -711,6 +744,50 @@ function DashboardTracteur({ equipement, onRetourProfil, ongletPrecedent }) {
             className="mt-2 text-left text-xs text-olive-700 hover:underline"
           >
             {showActivitesDetail ? "Masquer le détail" : "Afficher le détail"}
+          </button>
+        </div>
+
+        {/* Activités à l'heure */}
+        <div className="bg-white border border-gray-200 rounded-lg px-3 py-3 shadow-sm flex flex-col">
+          <p className="text-xs text-gray-500 uppercase tracking-wide">Activités à l&apos;heure</p>
+          {loadingActivites ? (
+            <p className="mt-2 text-sm text-gray-500">Chargement des activités...</p>
+          ) : activitesError ? (
+            <p className="mt-2 text-xs text-red-600">{activitesError}</p>
+          ) : (
+            <p className="mt-2 text-xl font-semibold text-gray-900">
+              {fmt(totalHeures, 1)} h
+            </p>
+          )}
+          <p className="mt-1 text-xs text-gray-500">Mes parcelles + sous-traitance</p>
+          <button
+            type="button"
+            onClick={() => setShowHeuresDetail((v) => !v)}
+            className="mt-2 text-left text-xs text-olive-700 hover:underline"
+          >
+            {showHeuresDetail ? "Masquer le détail" : "Afficher le détail"}
+          </button>
+        </div>
+
+        {/* Économie réalisée */}
+        <div className="bg-white border border-gray-200 rounded-lg px-3 py-3 shadow-sm flex flex-col">
+          <p className="text-xs text-gray-500 uppercase tracking-wide">Économie réalisée</p>
+          {loadingActivites ? (
+            <p className="mt-2 text-sm text-gray-500">Chargement des activités...</p>
+          ) : activitesError ? (
+            <p className="mt-2 text-xs text-red-600">{activitesError}</p>
+          ) : (
+            <p className="mt-2 text-xl font-semibold text-emerald-700">
+              {fmt(economiesHypothetiques)} DT
+            </p>
+          )}
+          <p className="mt-1 text-xs text-gray-500">Coût évité sur mes parcelles</p>
+          <button
+            type="button"
+            onClick={() => setShowEconomieDetail((v) => !v)}
+            className="mt-2 text-left text-xs text-olive-700 hover:underline"
+          >
+            {showEconomieDetail ? "Masquer le détail" : "Afficher le détail"}
           </button>
         </div>
       </section>
@@ -887,11 +964,12 @@ function DashboardTracteur({ equipement, onRetourProfil, ongletPrecedent }) {
       <Modal isOpen={showActivitesDetail} onClose={() => setShowActivitesDetail(false)} title="Détail des activités tracteur" size="xlarge">
         {loadingActivites ? (
           <p className="py-6 text-sm text-gray-500">Chargement des activités...</p>
-        ) : activites.length === 0 ? (
-          <p className="py-6 text-sm text-gray-400 text-center">Aucune activité enregistrée pour cette sélection.</p>
+        ) : activites.filter(a => a.mode_facturation !== "par_heure").length === 0 ? (
+          <p className="py-6 text-sm text-gray-400 text-center">Aucune activité à l&apos;olivier enregistrée pour cette sélection.</p>
         ) : (() => {
-          const totalPages = Math.ceil(activites.length / ACTIVITES_PAGE_SIZE)
-          const pageActivites = activites.slice(activitePage * ACTIVITES_PAGE_SIZE, (activitePage + 1) * ACTIVITES_PAGE_SIZE)
+          const activitesOlivier = activites.filter(a => a.mode_facturation !== "par_heure")
+          const totalPages = Math.ceil(activitesOlivier.length / ACTIVITES_PAGE_SIZE)
+          const pageActivites = activitesOlivier.slice(activitePage * ACTIVITES_PAGE_SIZE, (activitePage + 1) * ACTIVITES_PAGE_SIZE)
           return (
             <>
               {/* Vue cartes — mobile uniquement */}
@@ -930,7 +1008,7 @@ function DashboardTracteur({ equipement, onRetourProfil, ongletPrecedent }) {
                       )}
                       <div className="flex items-center gap-3 pt-2 border-t border-gray-100">
                         <button type="button" onClick={() => { setShowActivitesDetail(false); handleOpenEditModal(a) }} className="text-xs font-medium text-indigo-600 hover:text-indigo-800">Modifier</button>
-                        <button type="button" onClick={() => handleDelete(a)} disabled={deletingId === a.id} className="text-xs font-medium text-red-600 hover:text-red-800 ml-auto disabled:opacity-50">
+                        <button type="button" onClick={() => { setShowHeuresDetail(false); handleDelete(a) }} disabled={deletingId === a.id} className="text-xs font-medium text-red-600 hover:text-red-800 ml-auto disabled:opacity-50">
                           {deletingId === a.id ? "..." : "Supprimer"}
                         </button>
                       </div>
@@ -1005,7 +1083,7 @@ function DashboardTracteur({ equipement, onRetourProfil, ongletPrecedent }) {
               {totalPages > 1 && (
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mt-3 px-1">
                   <p className="text-sm text-gray-500">
-                    {activitePage * ACTIVITES_PAGE_SIZE + 1}–{Math.min((activitePage + 1) * ACTIVITES_PAGE_SIZE, activites.length)} sur {activites.length} activités
+                    {activitePage * ACTIVITES_PAGE_SIZE + 1}–{Math.min((activitePage + 1) * ACTIVITES_PAGE_SIZE, activitesOlivier.length)} sur {activitesOlivier.length} activités
                   </p>
                   <div className="flex items-center gap-1">
                     <button type="button" onClick={() => setActivitePage((p) => p - 1)} disabled={activitePage === 0}
@@ -1166,6 +1244,235 @@ function DashboardTracteur({ equipement, onRetourProfil, ongletPrecedent }) {
           )}
         </div>
       </section>
+
+      {/* MODAL : Activités à l'heure */}
+      <Modal isOpen={showHeuresDetail} onClose={() => setShowHeuresDetail(false)} title="Activités à l'heure" size="xlarge">
+        {activitesParHeureSorted.length === 0 ? (
+          <p className="py-6 text-sm text-gray-400 text-center">Aucune activité à l&apos;heure enregistrée.</p>
+        ) : (() => {
+          const totalPages = Math.ceil(activitesParHeureSorted.length / ACTIVITES_PAGE_SIZE)
+          const pageData = activitesParHeureSorted.slice(heuresPage * ACTIVITES_PAGE_SIZE, (heuresPage + 1) * ACTIVITES_PAGE_SIZE)
+          const totalMontant = activitesParHeureSorted.reduce((s, a) => s + calcMontantActivite(a), 0)
+          const thClass = (col) => `px-3 py-2 text-left font-medium cursor-pointer select-none hover:bg-gray-100 ${heuresSort.col === col ? "text-olive-700" : ""}`
+          const toggle = (col) => setHeuresSort((s) => ({ col, dir: s.col === col && s.dir === "asc" ? "desc" : "asc" }))
+          const arrow = (col) => heuresSort.col === col ? (heuresSort.dir === "asc" ? " ↑" : " ↓") : ""
+          return (
+            <>
+              {/* Cards mobile */}
+              <div className="md:hidden space-y-2 mb-2">
+                {pageData.map((a) => {
+                  const montant = calcMontantActivite(a)
+                  return (
+                    <div key={a.id} className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
+                      <div className="flex items-start justify-between mb-1">
+                        <div>
+                          <p className="text-sm font-semibold text-gray-900">{a.date_activite}</p>
+                          {a.type_activite === "sous_traitance"
+                            ? <span className="inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-medium text-indigo-700">Sous-traitance</span>
+                            : <span className="inline-flex items-center rounded-full bg-olive-50 px-2 py-0.5 text-[10px] font-medium text-olive-700">Mes parcelles</span>
+                          }
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xl font-bold text-gray-900">{fmt(parseFloat(a.nb_heures) || 0, 1)} h</p>
+                          <p className="text-xs text-gray-500">{fmt(parseFloat(a.prix_par_heure) || 0)} DT/h</p>
+                          <p className="text-sm font-semibold text-gray-700">{fmt(montant)} DT</p>
+                        </div>
+                      </div>
+                      {a.commentaire && <p className="text-xs text-gray-400 mb-2 truncate">{a.commentaire}</p>}
+                      <div className="flex items-center gap-3 pt-2 border-t border-gray-100">
+                        <button type="button" onClick={() => { setShowHeuresDetail(false); handleOpenEditModal(a) }} className="text-xs font-medium text-indigo-600 hover:text-indigo-800">Modifier</button>
+                        <button type="button" onClick={() => { setShowHeuresDetail(false); handleDelete(a) }} disabled={deletingId === a.id} className="text-xs font-medium text-red-600 hover:text-red-800 ml-auto disabled:opacity-50">
+                          {deletingId === a.id ? "..." : "Supprimer"}
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })}
+                <div className="rounded-lg bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-700 flex justify-between">
+                  <span>Total</span>
+                  <span>{fmt(totalHeures, 1)} h — {fmt(totalMontant)} DT</span>
+                </div>
+              </div>
+
+              {/* Tableau desktop */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="bg-gray-50 text-gray-500 uppercase tracking-wide">
+                      <th className={thClass("date_activite")} onClick={() => toggle("date_activite")}>Date{arrow("date_activite")}</th>
+                      <th className={thClass("type_activite")} onClick={() => toggle("type_activite")}>Type{arrow("type_activite")}</th>
+                      <th className={thClass("nb_heures") + " text-right"} onClick={() => toggle("nb_heures")}>Heures{arrow("nb_heures")}</th>
+                      <th className="px-3 py-2 text-right font-medium">Prix/h</th>
+                      <th className={thClass("montant") + " text-right"} onClick={() => toggle("montant")}>Montant{arrow("montant")}</th>
+                      <th className="px-3 py-2 text-left font-medium">Commentaire</th>
+                      <th className="px-3 py-2"></th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {pageData.map((a) => {
+                      const montant = calcMontantActivite(a)
+                      return (
+                        <tr key={a.id} className="hover:bg-gray-50">
+                          <td className="px-3 py-2 text-gray-800 whitespace-nowrap">{a.date_activite}</td>
+                          <td className="px-3 py-2">
+                            {a.type_activite === "sous_traitance"
+                              ? <span className="inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-medium text-indigo-700">Sous-traitance</span>
+                              : <span className="inline-flex items-center rounded-full bg-olive-50 px-2 py-0.5 text-[10px] font-medium text-olive-700">Mes parcelles</span>
+                            }
+                          </td>
+                          <td className="px-3 py-2 text-right text-gray-800">{fmt(parseFloat(a.nb_heures) || 0, 1)} h</td>
+                          <td className="px-3 py-2 text-right text-gray-600">{fmt(parseFloat(a.prix_par_heure) || 0)} DT/h</td>
+                          <td className="px-3 py-2 text-right font-medium text-gray-800">{fmt(montant)} DT</td>
+                          <td className="px-3 py-2 text-gray-500 max-w-40 truncate">{a.commentaire || "—"}</td>
+                          <td className="px-3 py-2 whitespace-nowrap text-right">
+                            <button type="button" onClick={() => { setShowHeuresDetail(false); handleOpenEditModal(a) }} className="text-indigo-600 hover:underline mr-3">Modifier</button>
+                            <button type="button" onClick={() => { setShowHeuresDetail(false); handleDelete(a) }} disabled={deletingId === a.id} className="text-red-500 hover:underline disabled:opacity-50">
+                              {deletingId === a.id ? "..." : "Supprimer"}
+                            </button>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                  <tfoot>
+                    <tr className="bg-gray-50 font-semibold">
+                      <td colSpan={2} className="px-3 py-2 text-xs text-gray-700">Total</td>
+                      <td className="px-3 py-2 text-right text-xs text-gray-900">{fmt(totalHeures, 1)} h</td>
+                      <td />
+                      <td className="px-3 py-2 text-right text-xs text-gray-900">{fmt(totalMontant)} DT</td>
+                      <td colSpan={2} />
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+
+              {totalPages > 1 && (
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mt-3 px-1">
+                  <p className="text-sm text-gray-500">
+                    {heuresPage * ACTIVITES_PAGE_SIZE + 1}–{Math.min((heuresPage + 1) * ACTIVITES_PAGE_SIZE, activitesParHeureSorted.length)} sur {activitesParHeureSorted.length} activités
+                  </p>
+                  <div className="flex items-center gap-1">
+                    <button type="button" onClick={() => setHeuresPage((p) => p - 1)} disabled={heuresPage === 0}
+                      className="rounded-md border border-gray-300 bg-white px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40">←</button>
+                    {getPageNums(heuresPage, totalPages).map((p, i) =>
+                      p === "…" ? (
+                        <span key={`e-${i}`} className="px-1 text-sm text-gray-400">…</span>
+                      ) : (
+                        <button key={p} type="button" onClick={() => setHeuresPage(p - 1)}
+                          className={`rounded-md border px-3 py-2.5 text-sm font-medium ${p === heuresPage + 1 ? "border-olive-600 bg-olive-600 text-white" : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"}`}>
+                          {p}
+                        </button>
+                      )
+                    )}
+                    <button type="button" onClick={() => setHeuresPage((p) => p + 1)} disabled={heuresPage >= totalPages - 1}
+                      className="rounded-md border border-gray-300 bg-white px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40">→</button>
+                  </div>
+                </div>
+              )}
+            </>
+          )
+        })()}
+      </Modal>
+
+      {/* MODAL : Économie réalisée (Mes parcelles) */}
+      <Modal isOpen={showEconomieDetail} onClose={() => setShowEconomieDetail(false)} title="Économie réalisée — Mes parcelles" size="xlarge">
+        {activitesPropSorted.length === 0 ? (
+          <p className="py-6 text-sm text-gray-400 text-center">Aucune activité sur vos parcelles enregistrée.</p>
+        ) : (
+          <>
+            {/* Cards mobile */}
+            <div className="md:hidden space-y-2 mb-2">
+              {activitesPropSorted.map((a) => {
+                const montant = calcMontantActivite(a)
+                return (
+                  <div key={a.id} className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
+                    <div className="flex items-start justify-between mb-1">
+                      <div>
+                        <p className="text-sm font-semibold text-gray-900">{a.date_activite}</p>
+                        {a.mode_facturation === "par_heure"
+                          ? <span className="inline-flex items-center rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-medium text-purple-700">À l&apos;heure</span>
+                          : <span className="inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-medium text-indigo-700">À l&apos;olivier</span>
+                        }
+                      </div>
+                      <div className="text-right">
+                        {a.mode_facturation === "par_heure"
+                          ? <><p className="text-sm font-bold text-gray-900">{fmt(parseFloat(a.nb_heures) || 0, 1)} h</p><p className="text-xs text-gray-500">{fmt(parseFloat(a.prix_par_heure) || 0)} DT/h</p></>
+                          : <><p className="text-sm font-bold text-gray-900">{Number(a.nb_oliviers ?? 0).toLocaleString("fr-FR")} oliviers</p><p className="text-xs text-gray-500">{fmt(parseFloat(a.prix_par_olivier) || 0)} DT/olivier</p></>
+                        }
+                        <p className="text-base font-semibold text-emerald-700">{fmt(montant)} DT</p>
+                      </div>
+                    </div>
+                    {a.commentaire && <p className="text-xs text-gray-400 mt-1 truncate">{a.commentaire}</p>}
+                  </div>
+                )
+              })}
+              <div className="rounded-lg bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 flex justify-between">
+                <span>Économie totale</span>
+                <span>{fmt(economiesHypothetiques)} DT</span>
+              </div>
+            </div>
+
+            {/* Tableau desktop */}
+            <div className="hidden md:block overflow-x-auto">
+              {(() => {
+                const thClass = (col) => `px-3 py-2 text-left font-medium cursor-pointer select-none hover:bg-gray-100 ${economieSort.col === col ? "text-olive-700" : ""}`
+                const toggle = (col) => setEconomieSort((s) => ({ col, dir: s.col === col && s.dir === "asc" ? "desc" : "asc" }))
+                const arrow = (col) => economieSort.col === col ? (economieSort.dir === "asc" ? " ↑" : " ↓") : ""
+                return (
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="bg-gray-50 text-gray-500 uppercase tracking-wide">
+                        <th className={thClass("date_activite")} onClick={() => toggle("date_activite")}>Date{arrow("date_activite")}</th>
+                        <th className={thClass("mode_facturation")} onClick={() => toggle("mode_facturation")}>Mode{arrow("mode_facturation")}</th>
+                        <th className="px-3 py-2 text-right font-medium">Quantité</th>
+                        <th className="px-3 py-2 text-right font-medium">Prix unit.</th>
+                        <th className={thClass("montant") + " text-right"} onClick={() => toggle("montant")}>Économie{arrow("montant")}</th>
+                        <th className="px-3 py-2 text-left font-medium">Commentaire</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {activitesPropSorted.map((a) => {
+                        const montant = calcMontantActivite(a)
+                        return (
+                          <tr key={a.id} className="hover:bg-gray-50">
+                            <td className="px-3 py-2 text-gray-800 whitespace-nowrap">{a.date_activite}</td>
+                            <td className="px-3 py-2">
+                              {a.mode_facturation === "par_heure"
+                                ? <span className="inline-flex items-center rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-medium text-purple-700">À l&apos;heure</span>
+                                : <span className="inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-medium text-indigo-700">À l&apos;olivier</span>
+                              }
+                            </td>
+                            {a.mode_facturation === "par_heure" ? (
+                              <>
+                                <td className="px-3 py-2 text-right text-gray-800">{fmt(parseFloat(a.nb_heures) || 0, 1)} h</td>
+                                <td className="px-3 py-2 text-right text-gray-600">{fmt(parseFloat(a.prix_par_heure) || 0)} DT/h</td>
+                              </>
+                            ) : (
+                              <>
+                                <td className="px-3 py-2 text-right text-gray-800">{Number(a.nb_oliviers ?? 0).toLocaleString("fr-FR")} oliviers</td>
+                                <td className="px-3 py-2 text-right text-gray-600">{fmt(parseFloat(a.prix_par_olivier) || 0)} DT</td>
+                              </>
+                            )}
+                            <td className="px-3 py-2 text-right font-medium text-emerald-700">{fmt(montant)} DT</td>
+                            <td className="px-3 py-2 text-gray-500 max-w-40 truncate">{a.commentaire || "—"}</td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                    <tfoot>
+                      <tr className="bg-emerald-50 font-semibold">
+                        <td colSpan={4} className="px-3 py-2 text-xs text-emerald-700">Économie totale</td>
+                        <td className="px-3 py-2 text-right text-xs text-emerald-700">{fmt(economiesHypothetiques)} DT</td>
+                        <td />
+                      </tr>
+                    </tfoot>
+                  </table>
+                )
+              })()}
+            </div>
+          </>
+        )}
+      </Modal>
 
       {/* Sections placeholder */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
